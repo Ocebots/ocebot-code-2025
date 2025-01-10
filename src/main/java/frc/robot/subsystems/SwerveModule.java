@@ -21,7 +21,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.config.ModuleConfig;
+import frc.robot.config.SwerveModuleConfig;
 
 public class SwerveModule {
   private final SparkMax drivingSparkMax;
@@ -49,19 +49,21 @@ public class SwerveModule {
         new SparkMaxConfig()
             .apply(
                 new EncoderConfig()
-                    .positionConversionFactor(ModuleConfig.DRIVING_ENCODER_POSITION_FACTOR)
-                    .velocityConversionFactor(ModuleConfig.DRIVING_ENCODER_VELOCITY_FACTOR))
+                    .positionConversionFactor(SwerveModuleConfig.DRIVING_ENCODER_POSITION_FACTOR)
+                    .velocityConversionFactor(SwerveModuleConfig.DRIVING_ENCODER_VELOCITY_FACTOR))
             .apply(
                 new ClosedLoopConfig()
                     .pidf(
-                        ModuleConfig.DRIVING_P,
-                        ModuleConfig.DRIVING_I,
-                        ModuleConfig.DRIVING_D,
-                        ModuleConfig.DRIVING_FF)
-                    .outputRange(ModuleConfig.DRIVING_MIN_OUTPUT, ModuleConfig.DRIVING_MAX_OUTPUT)
+                        SwerveModuleConfig.DRIVING_P,
+                        SwerveModuleConfig.DRIVING_I,
+                        SwerveModuleConfig.DRIVING_D,
+                        SwerveModuleConfig.DRIVING_FF)
+                    .outputRange(
+                        SwerveModuleConfig.DRIVING_MIN_OUTPUT,
+                        SwerveModuleConfig.DRIVING_MAX_OUTPUT)
                     .feedbackSensor(FeedbackSensor.kPrimaryEncoder))
-            .idleMode(ModuleConfig.DRIVING_MOTOR_IDLE_MODE)
-            .smartCurrentLimit(ModuleConfig.DRIVING_MOTOR_CURRENT_LIMIT),
+            .idleMode(SwerveModuleConfig.DRIVING_MOTOR_IDLE_MODE)
+            .smartCurrentLimit(SwerveModuleConfig.DRIVING_MOTOR_CURRENT_LIMIT),
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
@@ -69,24 +71,26 @@ public class SwerveModule {
         new SparkMaxConfig()
             .apply(
                 new AbsoluteEncoderConfig()
-                    .positionConversionFactor(ModuleConfig.TURNING_ENCODER_POSITION_FACTOR)
-                    .velocityConversionFactor(ModuleConfig.TURNING_ENCODER_VELOCITY_FACTOR)
-                    .inverted(ModuleConfig.IS_TURNING_ENCODER_INVERTED))
+                    .positionConversionFactor(SwerveModuleConfig.TURNING_ENCODER_POSITION_FACTOR)
+                    .velocityConversionFactor(SwerveModuleConfig.TURNING_ENCODER_VELOCITY_FACTOR)
+                    .inverted(SwerveModuleConfig.IS_TURNING_ENCODER_INVERTED))
             .apply(
                 new ClosedLoopConfig()
                     .pidf(
-                        ModuleConfig.TURNING_P,
-                        ModuleConfig.TURNING_I,
-                        ModuleConfig.TURNING_D,
-                        ModuleConfig.TURNING_FF)
-                    .outputRange(ModuleConfig.TURNING_MIN_OUTPUT, ModuleConfig.TURNING_MAX_OUTPUT)
+                        SwerveModuleConfig.TURNING_P,
+                        SwerveModuleConfig.TURNING_I,
+                        SwerveModuleConfig.TURNING_D,
+                        SwerveModuleConfig.TURNING_FF)
+                    .outputRange(
+                        SwerveModuleConfig.TURNING_MIN_OUTPUT,
+                        SwerveModuleConfig.TURNING_MAX_OUTPUT)
                     .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                     .positionWrappingEnabled(true)
                     .positionWrappingInputRange(
-                        ModuleConfig.TURNING_ENCODER_POSITION_PID_MIN_INPUT,
-                        ModuleConfig.TURNING_ENCODER_POSITION_PID_MAX_INPUT))
-            .idleMode(ModuleConfig.TURNING_MOTOR_IDLE_MODE)
-            .smartCurrentLimit(ModuleConfig.TURNING_MOTOR_CURRENT_LIMIT),
+                        SwerveModuleConfig.TURNING_ENCODER_POSITION_PID_MIN_INPUT,
+                        SwerveModuleConfig.TURNING_ENCODER_POSITION_PID_MAX_INPUT))
+            .idleMode(SwerveModuleConfig.TURNING_MOTOR_IDLE_MODE)
+            .smartCurrentLimit(SwerveModuleConfig.TURNING_MOTOR_CURRENT_LIMIT),
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
