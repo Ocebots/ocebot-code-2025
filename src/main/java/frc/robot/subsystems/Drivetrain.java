@@ -5,6 +5,8 @@
 package frc.robot.subsystems;
 
 import com.studica.frc.AHRS;
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -21,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.CANMappings;
 import frc.robot.config.DrivetrainConfig;
 
+@Logged
 public class Drivetrain extends SubsystemBase {
   // Create MAXSwerveModules
   private final SwerveModule frontLeft =
@@ -48,17 +51,19 @@ public class Drivetrain extends SubsystemBase {
           DrivetrainConfig.BACK_RIGHT_CHASSIS_ANGULAR_OFFSET);
 
   // The gyro sensor
-  private final AHRS gyro = new AHRS(AHRS.NavXComType.kMXP_SPI);
+  @NotLogged private final AHRS gyro = new AHRS(AHRS.NavXComType.kMXP_SPI);
 
-  private final Field2d field = new Field2d();
-
-  private double currentRotation = 0.0;
+  @NotLogged private final Field2d field = new Field2d();
 
   // Slew rate filter variables for controlling lateral acceleration
+  @NotLogged
   private SlewRateLimiter magLimiter = new SlewRateLimiter(DrivetrainConfig.MAX_ACCELERATION);
+
+  @NotLogged
   private SlewRateLimiter rotLimiter =
       new SlewRateLimiter(DrivetrainConfig.MAX_ROTATIONAL_ACCELERATION);
 
+  @NotLogged
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(
           DrivetrainConfig.DRIVE_KINEMATICS,
@@ -71,7 +76,6 @@ public class Drivetrain extends SubsystemBase {
           },
           new Pose2d(0, 0, getHeading()));
 
-  /** Creates a new DriveSubsystem. */
   public Drivetrain() {
     SmartDashboard.putData(field);
   }
@@ -98,28 +102,18 @@ public class Drivetrain extends SubsystemBase {
     this.rearRight.setDesiredState(swerveModuleStates[3]);
   }
 
-  public void logData() {
-    frontLeft.sendData("drive/frontLeft");
-    frontRight.sendData("drive/frontRight");
-    rearLeft.sendData("drive/rearLeft");
-    rearRight.sendData("drive/rearRight");
-
-    SmartDashboard.putNumber("drive/gyro", getHeading().getRadians());
-
-    field.setRobotPose(getPose());
-  }
-
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
-    this.poseEstimator.update(
-        getHeading(),
-        new SwerveModulePosition[] {
-          this.frontLeft.getPosition(),
-          this.frontRight.getPosition(),
-          this.rearLeft.getPosition(),
-          this.rearRight.getPosition()
-        });
+    field.setRobotPose(
+        this.poseEstimator.update(
+            getHeading(),
+            new SwerveModulePosition[] {
+              this.frontLeft.getPosition(),
+              this.frontRight.getPosition(),
+              this.rearLeft.getPosition(),
+              this.rearRight.getPosition()
+            }));
   }
 
   /**
@@ -127,6 +121,7 @@ public class Drivetrain extends SubsystemBase {
    *
    * @return The pose.
    */
+  @Logged
   public Pose2d getPose() {
     return this.poseEstimator.getEstimatedPosition();
   }
@@ -146,6 +141,7 @@ public class Drivetrain extends SubsystemBase {
 
     double xSpeedCommanded;
     double ySpeedCommanded;
+    double rotationCommanded;
 
     if (rateLimit) {
       // Convert XY to polar(theta and magnitude) for rate limiting
@@ -160,11 +156,11 @@ public class Drivetrain extends SubsystemBase {
 
       xSpeedCommanded = inputTranslationMag * Math.cos(inputTranslationDir);
       ySpeedCommanded = inputTranslationMag * Math.sin(inputTranslationDir);
-      this.currentRotation = rotLimiter.calculate(rot) * DrivetrainConfig.MAX_ANGULAR_SPEED;
+      rotationCommanded = rotLimiter.calculate(rot) * DrivetrainConfig.MAX_ANGULAR_SPEED;
     } else {
       xSpeedCommanded = xSpeed * DrivetrainConfig.MAX_SPEED_METERS_PER_SECOND;
       ySpeedCommanded = ySpeed * DrivetrainConfig.MAX_SPEED_METERS_PER_SECOND;
-      this.currentRotation = rot * DrivetrainConfig.MAX_ANGULAR_SPEED;
+      rotationCommanded = rot * DrivetrainConfig.MAX_ANGULAR_SPEED;
     }
 
     this.setChassisSpeeds(
@@ -172,14 +168,14 @@ public class Drivetrain extends SubsystemBase {
             ? ChassisSpeeds.fromFieldRelativeSpeeds(
                 xSpeedCommanded,
                 ySpeedCommanded,
-                this.currentRotation,
+                rotationCommanded,
                 getPose()
                     .getRotation()
                     .plus(
                         DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
                             ? Rotation2d.fromDegrees(0)
                             : Rotation2d.fromDegrees(180)))
-            : new ChassisSpeeds(xSpeedCommanded, ySpeedCommanded, this.currentRotation));
+            : new ChassisSpeeds(xSpeedCommanded, ySpeedCommanded, rotationCommanded));
   }
 
   /** Sets the wheels into an X formation to prevent movement. */
@@ -205,7 +201,8 @@ public class Drivetrain extends SubsystemBase {
    *
    * @return the robot's heading in degrees, from -180 to 180
    */
-  private Rotation2d getHeading() {
+  @Logged
+  public Rotation2d getHeading() {
     return Rotation2d.fromDegrees(
         this.gyro.getAngle() * (DrivetrainConfig.GYRO_IS_REVERSED ? -1.0 : 1.0));
   }

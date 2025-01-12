@@ -17,21 +17,25 @@ import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.config.SwerveModuleConfig;
 
+@Logged
 public class SwerveModule {
   private final SparkMax drivingSparkMax;
+
   private final SparkMax turningSparkMax;
 
   private final RelativeEncoder drivingEncoder;
+
   private final AbsoluteEncoder turningEncoder;
 
-  private final SparkClosedLoopController drivingPIDController;
-  private final SparkClosedLoopController turningPIDController;
+  @NotLogged private final SparkClosedLoopController drivingPIDController;
+  @NotLogged private final SparkClosedLoopController turningPIDController;
 
   private double chassisAngularOffset = 0;
   private SwerveModuleState desiredState = new SwerveModuleState(0.0, new Rotation2d());
@@ -110,6 +114,7 @@ public class SwerveModule {
    *
    * @return The current state of the module.
    */
+  @Logged
   public SwerveModuleState getState() {
     // Apply chassis angular offset to the encoder position to get the position
     // relative to the chassis.
@@ -165,27 +170,5 @@ public class SwerveModule {
   /** Zeroes all the SwerveModule encoders. */
   public void resetEncoders() {
     this.drivingEncoder.setPosition(0);
-  }
-
-  public void sendData(String module_path) {
-    SmartDashboard.putNumber(
-        module_path + "/turn/error",
-        this.getDesiredState().angle.getRadians() - this.getState().angle.getRadians());
-    SmartDashboard.putNumber(
-        module_path + "/drive/error",
-        this.getDesiredState().speedMetersPerSecond - this.getState().speedMetersPerSecond);
-
-    SmartDashboard.putNumber(module_path + "/turn/measured", this.getState().angle.getRadians());
-    SmartDashboard.putNumber(module_path + "/drive/measured", this.getState().speedMetersPerSecond);
-
-    SmartDashboard.putNumber(
-        module_path + "/turn/commanded", this.getDesiredState().angle.getRadians());
-    SmartDashboard.putNumber(
-        module_path + "/drive/commanded", this.getDesiredState().speedMetersPerSecond);
-
-    SmartDashboard.putNumber(
-        module_path + "/drive/current", this.drivingSparkMax.getOutputCurrent());
-    SmartDashboard.putNumber(
-        module_path + "/turn/current", this.drivingSparkMax.getOutputCurrent());
   }
 }
