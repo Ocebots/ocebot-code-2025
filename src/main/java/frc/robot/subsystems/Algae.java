@@ -22,7 +22,6 @@ public class Algae extends SubsystemBase {
       new ArmFeedforward(
           AlgaeConfig.ARM_S, AlgaeConfig.ARM_G, AlgaeConfig.ARM_V, AlgaeConfig.ARM_A);
 
-
   public Algae() {
     wheels.configure(
         new SparkMaxConfig()
@@ -42,9 +41,13 @@ public class Algae extends SubsystemBase {
         SparkBase.PersistMode.kPersistParameters);
     armController.setTolerance(AlgaeConfig.POSITION_TOLERANCE, AlgaeConfig.VELOCITY_TOLERANCE);
   }
-  private Command armAngChange(Rotation2d angle){
-    return Commands.runEnd(()->
-        arm.setVoltage(armController.calculate(armEncoder.getPosition(),angle.getRadians())+armFF.calculate(angle.getRadians(),0)),()->arm.stopMotor()
-        );
+
+  private Command armAngChange(Rotation2d angle) {
+    return Commands.runEnd(
+        () ->
+            arm.setVoltage(
+                armController.calculate(armEncoder.getPosition(), angle.getRadians())
+                    + armFF.calculate(angle.getRadians(), 0)),
+        () -> arm.stopMotor());
   }
 }
