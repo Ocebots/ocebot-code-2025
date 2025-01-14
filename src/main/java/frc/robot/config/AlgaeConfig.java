@@ -20,4 +20,7 @@ public class AlgaeConfig {
   public static final double ARM_A = 0.0;
   public static final double POSITION_TOLERANCE = Rotation2d.fromDegrees(5).getRadians();
   public static final double VELOCITY_TOLERANCE = Rotation2d.fromDegrees(5).getRadians();
+  public static final Rotation2d PICKUP_ANGLE = Rotation2d.fromDegrees(20);
+  public static final Rotation2d STORE_ANGLE = Rotation2d.fromDegrees(60);
+  public static final double INTAKE_SPEED = 1;
 }

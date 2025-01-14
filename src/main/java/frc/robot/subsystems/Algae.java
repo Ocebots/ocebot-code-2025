@@ -55,7 +55,7 @@ public class Algae extends SubsystemBase {
   }
 
   private Command wheelsMove(double speed) {
-    return Commands.runEnd(() -> wheels.set(speed), () -> wheels.stopMotor());
+    return Commands.runEnd(() -> wheels.set(speed), () -> wheels.stopMotor(), this);
   }
 
   private Command waitUntilArmReady() {
@@ -63,14 +63,16 @@ public class Algae extends SubsystemBase {
   }
 
   public Command pickUpAlgae() {
-    return Commands.none();
+    return armAngChange(AlgaeConfig.PICKUP_ANGLE).alongWith(wheelsMove(AlgaeConfig.INTAKE_SPEED));
   }
 
   public Command storeAlgae() {
-    return Commands.none();
+    return armAngChange(AlgaeConfig.STORE_ANGLE)
+        .alongWith(wheelsMove(AlgaeConfig.INTAKE_SPEED))
+        .withDeadline(waitUntilArmReady());
   }
 
   public Command releaseAlgae() {
-    return Commands.none();
+    return wheelsMove(-AlgaeConfig.INTAKE_SPEED);
   }
 }
