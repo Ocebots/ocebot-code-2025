@@ -9,7 +9,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -55,10 +54,23 @@ public class Algae extends SubsystemBase {
         () -> arm.stopMotor());
   }
 
-  private Command wheelsMove (double speed) {
-    return Commands.runEnd(
-            () -> wheels.set(speed),
-            () -> wheels.stopMotor()
-    );
+  private Command wheelsMove(double speed) {
+    return Commands.runEnd(() -> wheels.set(speed), () -> wheels.stopMotor());
+  }
+
+  private Command waitUntilArmReady() {
+    return Commands.waitUntil(() -> armController.atSetpoint());
+  }
+
+  public Command pickUpAlgae() {
+    return Commands.none();
+  }
+
+  public Command storeAlgae() {
+    return Commands.none();
+  }
+
+  public Command releaseAlgae() {
+    return Commands.none();
   }
 }
