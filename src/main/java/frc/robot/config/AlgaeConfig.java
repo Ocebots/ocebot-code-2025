@@ -23,4 +23,5 @@ public class AlgaeConfig {
   public static final Rotation2d PICKUP_ANGLE = Rotation2d.fromDegrees(20);
   public static final Rotation2d STORE_ANGLE = Rotation2d.fromDegrees(60);
   public static final double INTAKE_SPEED = 1;
+  public static final double RELEASE_TIME = 1; // in sec
 }
