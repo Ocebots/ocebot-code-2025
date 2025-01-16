@@ -9,6 +9,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.config.ControllerConfig;
 import frc.robot.subsystems.Algae;
 import frc.robot.subsystems.Drivetrain;
 
@@ -40,7 +41,7 @@ public class RobotContainer {
   }
 
   private double applyDeadband(double value) {
-    return MathUtil.applyDeadband(value, 0.05);
+    return MathUtil.applyDeadband(value, ControllerConfig.DEADBAND);
   }
 
   public Command getAutonomousCommand() {

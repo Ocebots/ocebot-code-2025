@@ -206,6 +206,4 @@ public class Drivetrain extends SubsystemBase {
     return Rotation2d.fromDegrees(
         this.gyro.getAngle() * (DrivetrainConfig.GYRO_IS_REVERSED ? -1.0 : 1.0));
   }
-
-
 }
