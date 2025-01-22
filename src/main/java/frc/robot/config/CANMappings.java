@@ -13,4 +13,7 @@ public class CANMappings {
   public static final int END_EFFECTOR_ID = 0;
   public static final int ALGAE_WHEEL_ID = 0;
   public static final int ALGAE_ARM_ID = 0;
+
+  public static final int ELEVATOR_L_ID = 0;
+  public static final int ELEVATOR_R_ID = 0;
 }
