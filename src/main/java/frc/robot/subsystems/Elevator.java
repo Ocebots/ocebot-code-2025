@@ -67,7 +67,8 @@ public class Elevator extends SubsystemBase {
               elevatorController.calculate(elevatorEncoder.getPosition(), state.position)
                   + elevatorFF.calculate(state.velocity));
         },
-        () -> elevator.stopMotor());
+        () -> elevator.stopMotor(),
+        this);
   }
 
   private boolean stopAtPosition() {
