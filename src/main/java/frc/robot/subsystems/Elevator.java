@@ -9,6 +9,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -56,10 +57,20 @@ public class Elevator extends SubsystemBase {
   private Command setElevatorHeight(double height) {
     return Commands.runEnd(
         () -> {
-          TrapezoidProfile.State state = profile.calculate();
+          TrapezoidProfile.State state =
+              profile.calculate(
+                  TimedRobot.kDefaultPeriod,
+                  new TrapezoidProfile.State(
+                      elevatorEncoder.getPosition(), elevatorEncoder.getVelocity()),
+                  new TrapezoidProfile.State(height, 0));
           elevator.setVoltage(
               elevatorController.calculate(elevatorEncoder.getPosition(), state.position)
                   + elevatorFF.calculate(state.velocity));
-        });
+        },
+        () -> elevator.stopMotor());
+  }
+
+  private boolean stopAtPosition() {
+    return profile.isFinished(TimedRobot.kDefaultPeriod);
   }
 }
