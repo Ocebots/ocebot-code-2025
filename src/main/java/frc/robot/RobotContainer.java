@@ -12,12 +12,16 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.config.ControllerConfig;
 import frc.robot.subsystems.Algae;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.Elevator;
 
 @Logged
 public class RobotContainer {
   private Drivetrain drivetrain = new Drivetrain();
   private Algae algae = new Algae();
+  private Elevator elevator = new Elevator();
   private CommandXboxController controller = new CommandXboxController(0);
+  private double[] elevatorHeights = {0.0, 0.46, 0.81, 1.21};
+  private int elevatorLevel = 0;
 
   public RobotContainer() {
     configureBindings();
@@ -27,6 +31,15 @@ public class RobotContainer {
     controller.b().whileTrue(algae.pickUpAlgae());
     controller.b().onFalse(algae.storeAlgae());
     controller.y().onTrue(algae.releaseAlgae());
+    controller
+        .rightBumper()
+        .onTrue(
+            Commands.runOnce(
+                () -> elevatorLevel = Math.min(elevatorLevel + 1, elevatorHeights.length - 1)));
+    controller
+        .leftBumper()
+        .onTrue(Commands.runOnce(() -> elevatorLevel = Math.max(elevatorLevel - 1, 0)));
+    elevator.setDefaultCommand(elevator.setElevatorHeight(() -> elevatorHeights[elevatorLevel]));
 
     drivetrain.setDefaultCommand(
         Commands.run(

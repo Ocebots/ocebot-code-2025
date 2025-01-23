@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.CANMappings;
 import frc.robot.config.ElevatorConfig;
+import java.util.function.DoubleSupplier;
 
 public class Elevator extends SubsystemBase {
   private SparkFlex elevator =
@@ -54,7 +55,7 @@ public class Elevator extends SubsystemBase {
         ElevatorConfig.POSITION_TOLERANCE, ElevatorConfig.VELOCITY_TOLERANCE);
   }
 
-  private Command setElevatorHeight(double height) {
+  public Command setElevatorHeight(DoubleSupplier height) {
     return Commands.runEnd(
         () -> {
           TrapezoidProfile.State state =
@@ -62,7 +63,7 @@ public class Elevator extends SubsystemBase {
                   TimedRobot.kDefaultPeriod,
                   new TrapezoidProfile.State(
                       elevatorEncoder.getPosition(), elevatorEncoder.getVelocity()),
-                  new TrapezoidProfile.State(height, 0));
+                  new TrapezoidProfile.State(height.getAsDouble(), 0));
           elevator.setVoltage(
               elevatorController.calculate(elevatorEncoder.getPosition(), state.position)
                   + elevatorFF.calculate(state.velocity));
@@ -71,7 +72,7 @@ public class Elevator extends SubsystemBase {
         this);
   }
 
-  private boolean stopAtPosition() {
+  public boolean stopAtPosition() {
     return profile.isFinished(TimedRobot.kDefaultPeriod);
   }
 }
