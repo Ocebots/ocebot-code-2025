@@ -43,15 +43,15 @@ public class CoralPivot extends SubsystemBase {
         SparkBase.PersistMode.kPersistParameters);
   }
 
-  private Command setPivotAngle(Supplier<Rotation2d> angle) {
+  public Command setPivotAngle(Supplier<Rotation2d> angle) {
     return Commands.runEnd(
         () ->
             pivot.setVoltage(
                 pivotController.calculate(pivotEnconder.getPosition(), angle.get().getRadians())
                     + pivotFF.calculate(angle.get().getRadians(), 0)),
-        () -> pivot.stopMotor());
+        () -> pivot.stopMotor(), this);
   }
-  private Command waitUntilPivotReady() {
+  public Command waitUntilPivotReady() {
       return Commands.waitUntil(() -> pivotController.atSetpoint());
   }
 
