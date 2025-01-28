@@ -14,11 +14,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.CANMappings;
 import frc.robot.config.CoralPivotConfig;
-
 import java.util.function.Supplier;
 
 public class CoralPivot extends SubsystemBase {
-  private SparkMax pivot = new SparkMax(CANMappings.PIVOT_ID, SparkLowLevel.MotorType.kBrushless);
+  private SparkMax pivot = new SparkMax(CANMappings.CORAL_PIVOT_ID, SparkLowLevel.MotorType.kBrushless);
   private RelativeEncoder pivotEnconder = pivot.getEncoder();
   private PIDController pivotController =
       new PIDController(
@@ -49,14 +48,14 @@ public class CoralPivot extends SubsystemBase {
             pivot.setVoltage(
                 pivotController.calculate(pivotEnconder.getPosition(), angle.get().getRadians())
                     + pivotFF.calculate(angle.get().getRadians(), 0)),
-        () -> pivot.stopMotor(), this);
+        () -> pivot.stopMotor(),
+        this);
   }
   public Command waitUntilPivotReady() {
-      return Commands.waitUntil(() -> pivotController.atSetpoint());
+    return Commands.waitUntil(() -> pivotController.atSetpoint());
   }
 
-
   public boolean isPivotReady() {
-      return waitUntilPivotReady().isFinished();
+    return waitUntilPivotReady().isFinished();
   }
 }
