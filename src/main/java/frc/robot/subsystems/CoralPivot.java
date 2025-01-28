@@ -17,7 +17,8 @@ import frc.robot.config.CoralPivotConfig;
 import java.util.function.Supplier;
 
 public class CoralPivot extends SubsystemBase {
-  private SparkMax pivot = new SparkMax(CANMappings.CORAL_PIVOT_ID, SparkLowLevel.MotorType.kBrushless);
+  private SparkMax pivot =
+      new SparkMax(CANMappings.CORAL_PIVOT_ID, SparkLowLevel.MotorType.kBrushless);
   private RelativeEncoder pivotEnconder = pivot.getEncoder();
   private PIDController pivotController =
       new PIDController(
@@ -51,11 +52,8 @@ public class CoralPivot extends SubsystemBase {
         () -> pivot.stopMotor(),
         this);
   }
-  public Command waitUntilPivotReady() {
-    return Commands.waitUntil(() -> pivotController.atSetpoint());
-  }
 
   public boolean isPivotReady() {
-    return waitUntilPivotReady().isFinished();
+    return pivotController.atSetpoint();
   }
 }

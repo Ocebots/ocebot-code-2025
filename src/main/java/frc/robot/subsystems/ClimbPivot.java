@@ -53,11 +53,7 @@ public class ClimbPivot extends SubsystemBase {
         this);
   }
 
-  public Command waitUntilPivotReady() {
-    return Commands.waitUntil(() -> pivotController.atSetpoint());
-  }
-
   public boolean isPivotReady() {
-    return waitUntilPivotReady().isFinished();
+    return pivotController.atSetpoint();
   }
 }
