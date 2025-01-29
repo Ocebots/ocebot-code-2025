@@ -4,9 +4,9 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import edu.wpi.first.math.util.Units;
 
 public class ElevatorConfig {
-  public static final double EL_P = 0.0;
+  public static final double EL_P = 2.0;
   public static final double EL_I = 0.0;
-  public static final double EL_D = 0.0;
+  public static final double EL_D = 2.0;
   public static final double EL_S = 0.0;
   public static final double EL_G = 0.0;
   public static final double EL_V = 0.0;
