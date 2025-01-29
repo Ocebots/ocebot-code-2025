@@ -6,12 +6,10 @@ package frc.robot;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.config.ControllerConfig;
-import frc.robot.config.OrbitConfig;
 import frc.robot.subsystems.Algae;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
@@ -24,10 +22,6 @@ public class RobotContainer {
   private CommandXboxController controller = new CommandXboxController(0);
   private double[] elevatorHeights = {0.0, 0.46, 0.81, 1.21};
   private int elevatorLevel = 0;
-  private PIDController OrbitXPIDController =
-      new PIDController(OrbitConfig.ORBIT_X_P, OrbitConfig.ORBIT_X_I, OrbitConfig.ORBIT_X_D);
-  private PIDController OrbitRotPIDController =
-      new PIDController(OrbitConfig.ORBIT_ROT_P, OrbitConfig.ORBIT_ROT_I, OrbitConfig.ORBIT_ROT_D);
 
   public RobotContainer() {
     configureBindings();
@@ -57,19 +51,6 @@ public class RobotContainer {
                     true,
                     true),
             drivetrain));
-
-    controller
-        .x()
-        .whileTrue(
-            Commands.run(
-                () ->
-                    drivetrain.drive(
-                        OrbitXPIDController.getSetpoint(),
-                        applyDeadband(-controller.getRightX()),
-                        OrbitRotPIDController.getSetpoint(),
-                        true,
-                        true),
-                drivetrain));
   }
 
   private double applyDeadband(double value) {
