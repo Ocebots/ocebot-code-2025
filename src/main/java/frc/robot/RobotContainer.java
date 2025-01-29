@@ -10,14 +10,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.config.ControllerConfig;
-import frc.robot.subsystems.Algae;
-import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
 
 @Logged
 public class RobotContainer {
-  private Drivetrain drivetrain = new Drivetrain();
-  private Algae algae = new Algae();
+  // private Drivetrain drivetrain = new Drivetrain();
+  // private Algae algae = new Algae();
   private Elevator elevator = new Elevator();
   private CommandXboxController controller = new CommandXboxController(0);
   private double[] elevatorHeights = {0.0, 0.46, 0.81, 1.21};
@@ -28,19 +26,25 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    controller.b().whileTrue(algae.pickUpAlgae());
-    controller.b().onFalse(algae.storeAlgae());
-    controller.y().onTrue(algae.releaseAlgae());
-    controller
-        .rightBumper()
-        .onTrue(
-            Commands.runOnce(
-                () -> elevatorLevel = Math.min(elevatorLevel + 1, elevatorHeights.length - 1)));
-    controller
-        .leftBumper()
-        .onTrue(Commands.runOnce(() -> elevatorLevel = Math.max(elevatorLevel - 1, 0)));
-    elevator.setDefaultCommand(elevator.setElevatorHeight(() -> elevatorHeights[elevatorLevel]));
 
+    /* controller.b().whileTrue(algae.pickUpAlgae());
+    controller.b().onFalse(algae.storeAlgae());
+    controller.y().onTrue(algae.releaseAlgae()); */
+
+    // controller
+    //    .rightBumper()
+    //    .onTrue(
+    //        Commands.runOnce(
+    //            () -> elevatorLevel = Math.min(elevatorLevel + 1, elevatorHeights.length - 1)));
+    // controller
+    //    .leftBumper()
+    //    .onTrue(Commands.runOnce(() -> elevatorLevel = Math.max(elevatorLevel - 1, 0)));
+    // elevator.setDefaultCommand(elevator.setElevatorHeight(() -> elevatorHeights[elevatorLevel]));
+
+    elevator.setDefaultCommand(elevator.setElevatorHeight(() -> 0.0));
+    controller.a().whileTrue(elevator.setElevatorHeight(() -> 0.1));
+
+    /*
     drivetrain.setDefaultCommand(
         Commands.run(
             () ->
@@ -51,6 +55,8 @@ public class RobotContainer {
                     true,
                     true),
             drivetrain));
+
+     */
   }
 
   private double applyDeadband(double value) {
@@ -60,4 +66,6 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return Commands.print("No autonomous command configured");
   }
+
+  public void periodic() {}
 }

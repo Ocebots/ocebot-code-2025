@@ -6,6 +6,7 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkFlexConfig;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -17,6 +18,7 @@ import frc.robot.config.CANMappings;
 import frc.robot.config.ElevatorConfig;
 import java.util.function.DoubleSupplier;
 
+@Logged
 public class Elevator extends SubsystemBase {
   private SparkFlex elevator =
       new SparkFlex(CANMappings.ELEVATOR_L_ID, SparkLowLevel.MotorType.kBrushless);
@@ -38,6 +40,7 @@ public class Elevator extends SubsystemBase {
         new SparkFlexConfig()
             .smartCurrentLimit(ElevatorConfig.ELEVATOR_CURRENT_LIMIT)
             .idleMode(ElevatorConfig.ELEVATOR_IDLE_MODE)
+            .inverted(true)
             .apply(
                 new EncoderConfig()
                     .positionConversionFactor(ElevatorConfig.ENCODER_POSITION_CONVERSION_FACTOR)
@@ -47,8 +50,7 @@ public class Elevator extends SubsystemBase {
     elevatorFollower.configure(
         new SparkFlexConfig()
             .smartCurrentLimit(ElevatorConfig.ELEVATOR_CURRENT_LIMIT)
-            .idleMode(ElevatorConfig.ELEVATOR_IDLE_MODE)
-            .follow(elevator, true),
+            .idleMode(ElevatorConfig.ELEVATOR_IDLE_MODE),
         SparkBase.ResetMode.kResetSafeParameters,
         SparkBase.PersistMode.kPersistParameters);
     elevatorController.setTolerance(
@@ -58,15 +60,14 @@ public class Elevator extends SubsystemBase {
   public Command setElevatorHeight(DoubleSupplier height) {
     return Commands.runEnd(
         () -> {
+          System.out.println("Elevator Height: " + height.getAsDouble());
           TrapezoidProfile.State state =
               profile.calculate(
                   TimedRobot.kDefaultPeriod,
                   new TrapezoidProfile.State(
                       elevatorEncoder.getPosition(), elevatorEncoder.getVelocity()),
                   new TrapezoidProfile.State(height.getAsDouble(), 0));
-          elevator.setVoltage(
-              elevatorController.calculate(elevatorEncoder.getPosition(), state.position)
-                  + elevatorFF.calculate(state.velocity));
+          elevator.setVoltage(12);
         },
         () -> elevator.stopMotor(),
         this);
