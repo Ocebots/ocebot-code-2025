@@ -1,11 +1,9 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.AbsoluteEncoderConfig;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -21,7 +19,7 @@ import java.util.function.Supplier;
 public class CoralPivot extends SubsystemBase {
   private SparkMax pivot =
       new SparkMax(CANMappings.CORAL_PIVOT_ID, SparkLowLevel.MotorType.kBrushless);
-  private AbsoluteEncoder pivotEnconder = pivot.getAbsoluteEncoder();
+  private RelativeEncoder pivotEnconder = pivot.getEncoder();
   private PIDController pivotController =
       new PIDController(
           CoralPivotConfig.PIVOT_P, CoralPivotConfig.PIVOT_I, CoralPivotConfig.PIVOT_D);
@@ -38,7 +36,7 @@ public class CoralPivot extends SubsystemBase {
             .smartCurrentLimit(CoralPivotConfig.PIVOT_CURRENT_LIMIT)
             .idleMode(CoralPivotConfig.PIVOT_IDLE_MODE)
             .apply(
-                new AbsoluteEncoderConfig()
+                new EncoderConfig()
                     .positionConversionFactor(CoralPivotConfig.ENCODER_POSITION_CONVERSION_FACTOR)
                     .velocityConversionFactor(CoralPivotConfig.ENCODER_VELOCITY_CONVERSION_FACTOR)),
         SparkBase.ResetMode.kResetSafeParameters,
