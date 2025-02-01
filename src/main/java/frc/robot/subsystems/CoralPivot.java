@@ -41,6 +41,7 @@ public class CoralPivot extends SubsystemBase {
                     .velocityConversionFactor(CoralPivotConfig.ENCODER_VELOCITY_CONVERSION_FACTOR)),
         SparkBase.ResetMode.kResetSafeParameters,
         SparkBase.PersistMode.kPersistParameters);
+    pivotController.setTolerance(CoralPivotConfig.POSITION_TOLERANCE, CoralPivotConfig.VELOCITY_TOLERANCE);
   }
 
   public Command setPivotAngle(Supplier<Rotation2d> angle) {
