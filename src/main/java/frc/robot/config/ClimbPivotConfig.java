@@ -1,6 +1,7 @@
 package frc.robot.config;
 
 import com.revrobotics.spark.config.SparkBaseConfig;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 
 public class ClimbPivotConfig {
@@ -18,4 +19,6 @@ public class ClimbPivotConfig {
     public static final double ENCODER_VELOCITY_CONVERSION_FACTOR =
             ENCODER_POSITION_CONVERSION_FACTOR
                     / 60.0;
+    public static final double POSITION_TOLERANCE = Rotation2d.fromDegrees(5).getRadians();
+    public static final double VELOCITY_TOLERANCE = Rotation2d.fromDegrees(5).getRadians();
 }
