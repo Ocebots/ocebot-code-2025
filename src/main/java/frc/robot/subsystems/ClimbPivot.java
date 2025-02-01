@@ -43,6 +43,7 @@ public class ClimbPivot extends SubsystemBase {
                     .velocityConversionFactor(ClimbPivotConfig.ENCODER_VELOCITY_CONVERSION_FACTOR)),
         SparkBase.ResetMode.kResetSafeParameters,
         SparkBase.PersistMode.kPersistParameters);
+    pivotController.setTolerance(ClimbPivotConfig.POSITION_TOLERANCE, ClimbPivotConfig.VELOCITY_TOLERANCE);
   }
 
   public Command setPivotAngle(Supplier<Rotation2d> angle) {
