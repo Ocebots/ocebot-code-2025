@@ -1,9 +1,11 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.AbsoluteEncoderConfig;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
@@ -19,7 +21,7 @@ import java.util.function.Supplier;
 public class ClimbPivot extends SubsystemBase {
   private SparkMax pivot =
       new SparkMax(CANMappings.CLIMB_PIVOT_ID, SparkLowLevel.MotorType.kBrushless);
-  private RelativeEncoder pivotEnconder = pivot.getEncoder();
+  private AbsoluteEncoder pivotEnconder = pivot.getAbsoluteEncoder();
   private PIDController pivotController =
       new PIDController(
           ClimbPivotConfig.PIVOT_P, ClimbPivotConfig.PIVOT_I, ClimbPivotConfig.PIVOT_D);
@@ -36,7 +38,7 @@ public class ClimbPivot extends SubsystemBase {
             .smartCurrentLimit(ClimbPivotConfig.PIVOT_CURRENT_LIMIT)
             .idleMode(ClimbPivotConfig.PIVOT_IDLE_MODE)
             .apply(
-                new EncoderConfig()
+                new AbsoluteEncoderConfig()
                     .positionConversionFactor(ClimbPivotConfig.ENCODER_POSITION_CONVERSION_FACTOR)
                     .velocityConversionFactor(ClimbPivotConfig.ENCODER_VELOCITY_CONVERSION_FACTOR)),
         SparkBase.ResetMode.kResetSafeParameters,
