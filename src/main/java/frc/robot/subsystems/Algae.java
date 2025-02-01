@@ -1,12 +1,10 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.AbsoluteEncoderConfig;
-import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
@@ -20,7 +18,7 @@ import frc.robot.config.CANMappings;
 public class Algae extends SubsystemBase {
   private SparkMax wheels = new SparkMax(CANMappings.ALGAE_WHEEL_ID, MotorType.kBrushless);
   private SparkMax arm = new SparkMax(CANMappings.ALGAE_ARM_ID, MotorType.kBrushless);
-  private RelativeEncoder armEncoder = arm.getEncoder();
+  private AbsoluteEncoder armEncoder = arm.getAbsoluteEncoder();
   private PIDController armController =
       new PIDController(AlgaeConfig.ARM_P, AlgaeConfig.ARM_I, AlgaeConfig.ARM_D);
   private ArmFeedforward armFF =
@@ -39,7 +37,7 @@ public class Algae extends SubsystemBase {
             .smartCurrentLimit(AlgaeConfig.ARM_CURRENT_LIMIT)
             .idleMode(AlgaeConfig.ARM_IDLEMODE)
             .apply(
-                new EncoderConfig()
+                new AbsoluteEncoderConfig()
                     .positionConversionFactor(AlgaeConfig.ENCODER_POSITION_CONVERSION_FACTOR)
                     .velocityConversionFactor(AlgaeConfig.ENCODER_VELOCITY_CONVERSION_FACTOR)),
         SparkBase.ResetMode.kResetSafeParameters,
