@@ -16,5 +16,6 @@ public class SparkMaxLogger extends ClassSpecificLogger<SparkBase> {
     backend.log("Motor Current (A)", motor.getOutputCurrent());
     backend.log("Motor Applied Output", motor.getAppliedOutput());
     backend.log("Motor Requested Output", motor.get());
+    backend.log("Bus Voltage", motor.getBusVoltage());
   }
 }
