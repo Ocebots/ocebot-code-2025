@@ -7,10 +7,12 @@ package frc.robot.subsystems;
 import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -19,9 +21,14 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.CANMappings;
 import frc.robot.config.DrivetrainConfig;
+import frc.robot.config.OrbitConfig;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 @Logged
 public class Drivetrain extends SubsystemBase {
@@ -49,6 +56,13 @@ public class Drivetrain extends SubsystemBase {
           CANMappings.REAR_RIGHT_DRIVING,
           CANMappings.REAR_RIGHT_TURNING,
           DrivetrainConfig.BACK_RIGHT_CHASSIS_ANGULAR_OFFSET);
+
+  private final PIDController orbitDistanceController =
+      new PIDController(
+          OrbitConfig.ORBIT_DISTANCE_P, OrbitConfig.ORBIT_DISTANCE_I, OrbitConfig.ORBIT_DISTANCE_D);
+  private final PIDController orbitRotationController =
+      new PIDController(
+          OrbitConfig.ORBIT_ROTATION_P, OrbitConfig.ORBIT_ROTATION_I, OrbitConfig.ORBIT_ROTATION_D);
 
   // The gyro sensor
   @NotLogged private final AHRS gyro = new AHRS(AHRS.NavXComType.kMXP_SPI);
@@ -78,6 +92,7 @@ public class Drivetrain extends SubsystemBase {
 
   public Drivetrain() {
     SmartDashboard.putData(field);
+    orbitRotationController.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   public ChassisSpeeds getChassisSpeeds() {
@@ -124,6 +139,22 @@ public class Drivetrain extends SubsystemBase {
   @Logged
   public Pose2d getPose() {
     return this.poseEstimator.getEstimatedPosition();
+  }
+
+  public Command orbit(Supplier<Pose2d> center, DoubleSupplier speed, DoubleSupplier distance) {
+    return Commands.runEnd(
+        () -> {
+          Transform2d relativeTransform = getPose().minus(center.get());
+
+          drive(
+              orbitDistanceController.calculate(
+                  relativeTransform.getTranslation().getNorm(), distance.getAsDouble()),
+              speed.getAsDouble(),
+              orbitRotationController.calculate(relativeTransform.getRotation().getRadians(), 0),
+              false,
+              true);
+        },
+        () -> drive(0, 0, 0, false, false));
   }
 
   /**
