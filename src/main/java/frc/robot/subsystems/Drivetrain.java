@@ -77,6 +77,8 @@ public class Drivetrain extends SubsystemBase {
   private SlewRateLimiter rotLimiter =
       new SlewRateLimiter(DrivetrainConfig.MAX_ROTATIONAL_ACCELERATION);
 
+  @Logged private ChassisSpeeds desiredChassisSpeeds = new ChassisSpeeds();
+
   @NotLogged
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(
@@ -95,6 +97,27 @@ public class Drivetrain extends SubsystemBase {
     orbitRotationController.enableContinuousInput(-Math.PI, Math.PI);
   }
 
+  @Logged(name = "desiredStates")
+  public SwerveModuleState[] getDesiredStates() {
+    return new SwerveModuleState[] {
+      this.frontLeft.getDesiredState(),
+      this.frontRight.getDesiredState(),
+      this.rearLeft.getDesiredState(),
+      this.rearRight.getDesiredState()
+    };
+  }
+
+  @Logged(name = "actualStates")
+  public SwerveModuleState[] getActualStates() {
+    return new SwerveModuleState[] {
+      this.frontLeft.getState(),
+      this.frontRight.getState(),
+      this.rearLeft.getState(),
+      this.rearRight.getState()
+    };
+  }
+
+  @Logged(name = "actualChassisSpeeds")
   public ChassisSpeeds getChassisSpeeds() {
     return DrivetrainConfig.DRIVE_KINEMATICS.toChassisSpeeds(
         new SwerveModuleState[] {
@@ -106,6 +129,7 @@ public class Drivetrain extends SubsystemBase {
   }
 
   public void setChassisSpeeds(ChassisSpeeds speeds) {
+    desiredChassisSpeeds = speeds;
     var swerveModuleStates = DrivetrainConfig.DRIVE_KINEMATICS.toSwerveModuleStates(speeds);
 
     SwerveDriveKinematics.desaturateWheelSpeeds(
@@ -169,7 +193,6 @@ public class Drivetrain extends SubsystemBase {
    */
   public void drive(
       double xSpeed, double ySpeed, double rot, boolean fieldRelative, boolean rateLimit) {
-
     double xSpeedCommanded;
     double ySpeedCommanded;
     double rotationCommanded;
@@ -215,16 +238,6 @@ public class Drivetrain extends SubsystemBase {
     this.frontRight.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
     this.rearLeft.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)));
     this.rearRight.setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)));
-  }
-
-  /** Resets the pose estimate to the given pose */
-  public void zeroPoseEstimate(Pose2d newPose) {
-    this.poseEstimator.resetPose(newPose);
-  }
-
-  /** Zeroes the heading of the robot. */
-  public void zeroHeading() {
-    this.gyro.reset();
   }
 
   /**
