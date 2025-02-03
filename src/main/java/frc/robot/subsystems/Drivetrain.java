@@ -234,10 +234,17 @@ public class Drivetrain extends SubsystemBase {
   }
 
   public Command orbitAroundReef(DoubleSupplier ySpeed) {
-    Pose2d coralCenter =
-        new Pose2d(Units.inchesToMeters(176.75), Units.inchesToMeters(158.50), new Rotation2d(0));
     return orbit(
-        () -> coralCenter, ySpeed, () -> Units.inchesToMeters(65.5 / 2.0 + 27.5 / 2.0 + 15.0));
+        () ->
+            new Pose2d(
+                Units.inchesToMeters(
+                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
+                        ? 176.75
+                        : 460.5866666666 - 176.75),
+                Units.inchesToMeters(158.50),
+                new Rotation2d(0)),
+        ySpeed,
+        () -> Units.inchesToMeters(65.5 / 2.0 + 27.5 / 2.0 + 15.0));
   }
 
   /** Sets the wheels into an X formation to prevent movement. */
