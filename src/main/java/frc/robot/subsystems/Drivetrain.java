@@ -17,6 +17,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -230,6 +231,13 @@ public class Drivetrain extends SubsystemBase {
                             ? Rotation2d.fromDegrees(0)
                             : Rotation2d.fromDegrees(180)))
             : new ChassisSpeeds(xSpeedCommanded, ySpeedCommanded, rotationCommanded));
+  }
+
+  public Command orbitAroundReef(DoubleSupplier ySpeed) {
+    Pose2d coralCenter =
+        new Pose2d(Units.inchesToMeters(176.75), Units.inchesToMeters(158.50), new Rotation2d(0));
+    return orbit(
+        () -> coralCenter, ySpeed, () -> Units.inchesToMeters(65.5 / 2.0 + 27.5 / 2.0 + 15.0));
   }
 
   /** Sets the wheels into an X formation to prevent movement. */
