@@ -20,7 +20,6 @@ public class RobotContainer {
   private Algae algae = new Algae();
   private Elevator elevator = new Elevator();
   private CommandXboxController controller = new CommandXboxController(0);
-  private double[] elevatorHeights = {0.0, 0.46, 0.81, 1.21};
   private int elevatorLevel = 0;
 
   public RobotContainer() {
@@ -39,7 +38,6 @@ public class RobotContainer {
     controller
         .leftBumper()
         .onTrue(Commands.runOnce(() -> elevatorLevel = Math.max(elevatorLevel - 1, 0)));
-    elevator.setDefaultCommand(elevator.setElevatorHeight(() -> elevatorHeights[elevatorLevel]));
 
     drivetrain.setDefaultCommand(
         Commands.run(

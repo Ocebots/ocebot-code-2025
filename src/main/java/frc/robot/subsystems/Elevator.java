@@ -72,7 +72,7 @@ public class Elevator extends SubsystemBase {
         this);
   }
 
-  public boolean stopAtPosition() {
+  public boolean isAtPosition() {
     return profile.isFinished(TimedRobot.kDefaultPeriod);
   }
 }
