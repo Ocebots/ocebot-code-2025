@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.CANMappings;
 import frc.robot.config.CoralPivotConfig;
-
 import java.util.function.Supplier;
 
 public class CoralPivot extends SubsystemBase {
