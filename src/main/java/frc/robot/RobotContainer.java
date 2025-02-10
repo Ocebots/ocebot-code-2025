@@ -30,11 +30,7 @@ public class RobotContainer {
     controller.b().whileTrue(algae.pickUpAlgae());
     controller.b().onFalse(algae.storeAlgae());
     controller.y().onTrue(algae.releaseAlgae());
-    controller
-        .rightBumper()
-        .onTrue(
-            Commands.runOnce(
-                () -> elevatorLevel = Math.min(elevatorLevel + 1, elevatorHeights.length - 1)));
+
     controller
         .leftBumper()
         .onTrue(Commands.runOnce(() -> elevatorLevel = Math.max(elevatorLevel - 1, 0)));
