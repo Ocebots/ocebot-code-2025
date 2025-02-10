@@ -8,11 +8,14 @@ import com.revrobotics.spark.config.AbsoluteEncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.CANMappings;
 import frc.robot.config.CoralPivotConfig;
+
+import java.util.function.Supplier;
 
 public class CoralPivot extends SubsystemBase {
   private SparkMax pivot =
@@ -43,7 +46,7 @@ public class CoralPivot extends SubsystemBase {
         CoralPivotConfig.POSITION_TOLERANCE, CoralPivotConfig.VELOCITY_TOLERANCE);
   }
 
-  public Command setPivotAngle(double angle) {
+  public Command setPivotAngle(Supplier<Rotation2d> angle) {
     return Commands.runEnd(
         () ->
             pivot.setVoltage(
