@@ -171,14 +171,22 @@ public class Drivetrain extends SubsystemBase {
           Transform2d relativeTransform = getPose().minus(center.get());
 
           drive(
-              orbitDistanceController.calculate(
+              -orbitDistanceController.calculate(
                   relativeTransform.getTranslation().getNorm(), distance.getAsDouble()),
               speed.getAsDouble(),
-              orbitRotationController.calculate(relativeTransform.getRotation().getRadians(), 0),
+              orbitRotationController.calculate(
+                  getHeading().getRadians(),
+                  center
+                      .get()
+                      .getTranslation()
+                      .minus(getPose().getTranslation())
+                      .getAngle()
+                      .getRadians()),
               false,
               true);
         },
-        () -> drive(0, 0, 0, false, false));
+        () -> drive(0, 0, 0, false, false),
+        this);
   }
 
   /**
@@ -247,7 +255,12 @@ public class Drivetrain extends SubsystemBase {
    */
   @Logged
   public Rotation2d getHeading() {
-    return Rotation2d.fromDegrees(
-        this.gyro.getAngle() * (DrivetrainConfig.GYRO_IS_REVERSED ? -1.0 : 1.0));
+    double angle = this.gyro.getAngle() * (DrivetrainConfig.GYRO_IS_REVERSED ? -1.0 : 1.0);
+
+    if (angle > 180.0 || angle < -180.0) {
+      angle -= Math.round(angle / 360.0) * 360.0;
+    }
+
+    return Rotation2d.fromDegrees(angle);
   }
 }
