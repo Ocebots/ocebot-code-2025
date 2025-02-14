@@ -1,13 +1,19 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.config.CoralConfig;
+import frc.robot.config.Positions;
+import java.util.function.IntSupplier;
 
 public class Coral extends SubsystemBase {
   private CoralGrabber grabber = new CoralGrabber();
   private Elevator elevator = new Elevator();
+  private PIDController movementController =
+      new PIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D);
   private CoralPivot coralPivot = new CoralPivot();
   private double[] elevatorHeights = {0.0, 0.46, 0.81, 1.21};
   private Rotation2d[] coralRotations = {
@@ -48,5 +54,24 @@ public class Coral extends SubsystemBase {
         .alongWith(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
+  }
+
+  public Command goToReef(Drivetrain drivetrain, IntSupplier idx) {
+    return drivetrain.orbit(
+        Positions::getReef,
+        () ->
+            movementController.calculate(
+                drivetrain
+                    .getPose()
+                    .getTranslation()
+                    .minus(Positions.getReef().getTranslation())
+                    .getAngle()
+                    .getRadians(),
+                Positions.getIndividualReef(idx.getAsInt())
+                    .getTranslation()
+                    .minus(Positions.getReef().getTranslation())
+                    .getAngle()
+                    .getRadians()),
+        () -> CoralConfig.MOVEMENT_DISTANCE);
   }
 }
