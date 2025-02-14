@@ -14,7 +14,7 @@ public class Coral extends SubsystemBase {
     new Rotation2d(0.0), new Rotation2d(0.0), new Rotation2d(0.0), new Rotation2d(0.0)
   };
 
-  public Command Level1Score() {
+  public Command l1Score() {
     return coralPivot
         .setPivotAngle(() -> coralRotations[0])
         .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[0]))
@@ -23,7 +23,7 @@ public class Coral extends SubsystemBase {
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
   }
 
-  public Command Level2Score() {
+  public Command l2Score() {
     return coralPivot
         .setPivotAngle(() -> coralRotations[1])
         .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[1]))
@@ -32,7 +32,7 @@ public class Coral extends SubsystemBase {
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
   }
 
-  public Command Level3Score() {
+  public Command l3Score() {
     return coralPivot
         .setPivotAngle(() -> coralRotations[2])
         .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[2]))
@@ -41,7 +41,7 @@ public class Coral extends SubsystemBase {
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
   }
 
-  public Command Level4Score() {
+  public Command l4Score() {
     return coralPivot
         .setPivotAngle(() -> coralRotations[3])
         .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[3]))
