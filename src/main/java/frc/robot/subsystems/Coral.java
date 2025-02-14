@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -16,8 +15,6 @@ public class Coral extends SubsystemBase {
   private PIDController movementController =
       new PIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D);
   private CoralPivot coralPivot = new CoralPivot();
-  private TrapezoidProfile trapezoidProfile =
-      new TrapezoidProfile(new TrapezoidProfile.Constraints(0, 0));
   private double[] elevatorHeights = {0.0, 0.46, 0.81, 1.21};
   private Rotation2d[] coralRotations = {
     new Rotation2d(0.0), new Rotation2d(0.0), new Rotation2d(0.0), new Rotation2d(0.0)
