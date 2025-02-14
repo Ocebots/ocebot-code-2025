@@ -6,10 +6,12 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkFlexConfig;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -17,6 +19,7 @@ import frc.robot.config.CANMappings;
 import frc.robot.config.ElevatorConfig;
 import java.util.function.DoubleSupplier;
 
+@Logged
 public class Elevator extends SubsystemBase {
   private SparkFlex elevator =
       new SparkFlex(CANMappings.ELEVATOR_L_ID, SparkLowLevel.MotorType.kBrushless);
@@ -55,21 +58,40 @@ public class Elevator extends SubsystemBase {
         ElevatorConfig.POSITION_TOLERANCE, ElevatorConfig.VELOCITY_TOLERANCE);
   }
 
+  double lastHeight = 0.0;
+  Timer timer = new Timer();
+
   public Command setElevatorHeight(DoubleSupplier height) {
     return Commands.runEnd(
         () -> {
+          double targetHeight = height.getAsDouble();
+          if (targetHeight != lastHeight) {
+            lastHeight = targetHeight;
+            timer.reset();
+            timer.start();
+          }
+
           TrapezoidProfile.State state =
               profile.calculate(
-                  TimedRobot.kDefaultPeriod,
+                  timer.get(),
                   new TrapezoidProfile.State(
                       elevatorEncoder.getPosition(), elevatorEncoder.getVelocity()),
-                  new TrapezoidProfile.State(height.getAsDouble(), 0));
+                  new TrapezoidProfile.State(targetHeight, 0));
+
           elevator.setVoltage(
               elevatorController.calculate(elevatorEncoder.getPosition(), state.position)
                   + elevatorFF.calculate(state.velocity));
         },
-        () -> elevator.stopMotor(),
+        () -> {
+          elevator.stopMotor();
+          timer.stop();
+        },
         this);
+  }
+
+  @Logged
+  public double getTimer() {
+    return timer.get();
   }
 
   public boolean isAtPosition() {
