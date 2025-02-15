@@ -25,6 +25,7 @@ public class Coral extends SubsystemBase {
   public Coral() {
     movementController.setTolerance(CoralConfig.POSITION_TOLERANCE, CoralConfig.VELOCITY_TOLERANCE);
   }
+
   public Command l1Score() {
     return coralPivot
         .setPivotAngle(() -> coralRotations[0])
