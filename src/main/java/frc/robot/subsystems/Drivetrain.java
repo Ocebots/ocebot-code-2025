@@ -17,7 +17,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -58,10 +57,10 @@ public class Drivetrain extends SubsystemBase {
           CANMappings.REAR_RIGHT_TURNING,
           DrivetrainConfig.BACK_RIGHT_CHASSIS_ANGULAR_OFFSET);
 
-  private final PIDController orbitDistanceController =
+  public final PIDController orbitDistanceController =
       new PIDController(
           OrbitConfig.ORBIT_DISTANCE_P, OrbitConfig.ORBIT_DISTANCE_I, OrbitConfig.ORBIT_DISTANCE_D);
-  private final PIDController orbitRotationController =
+  public final PIDController orbitRotationController =
       new PIDController(
           OrbitConfig.ORBIT_ROTATION_P, OrbitConfig.ORBIT_ROTATION_I, OrbitConfig.ORBIT_ROTATION_D);
 
@@ -96,6 +95,10 @@ public class Drivetrain extends SubsystemBase {
   public Drivetrain() {
     SmartDashboard.putData(field);
     orbitRotationController.enableContinuousInput(-Math.PI, Math.PI);
+    orbitDistanceController.setTolerance(
+        DrivetrainConfig.DISTANCE_POSITION_TOLERANCE, DrivetrainConfig.DISTANCE_VELOCITY_TOLERANCE);
+    orbitRotationController.setTolerance(
+        DrivetrainConfig.ROTATION_POSITION_TOLERANCE, DrivetrainConfig.ROTATION_VELOCITY_TOLERANCE);
   }
 
   @Logged(name = "desiredStates")
@@ -170,20 +173,22 @@ public class Drivetrain extends SubsystemBase {
     return Commands.runEnd(
         () -> {
           Transform2d relativeTransform = getPose().minus(center.get());
+          Rotation2d targetAngle =
+              center.get().getTranslation().minus(getPose().getTranslation()).getAngle();
+          ChassisSpeeds chassisSpeeds =
+              ChassisSpeeds.fromRobotRelativeSpeeds(
+                  -orbitDistanceController.calculate(
+                      relativeTransform.getTranslation().getNorm(), distance.getAsDouble()),
+                  speed.getAsDouble(),
+                  orbitRotationController.calculate(
+                      getHeading().getRadians(), targetAngle.getRadians()),
+                  targetAngle);
 
           drive(
-              -orbitDistanceController.calculate(
-                  relativeTransform.getTranslation().getNorm(), distance.getAsDouble()),
-              speed.getAsDouble(),
-              orbitRotationController.calculate(
-                  getHeading().getRadians(),
-                  center
-                      .get()
-                      .getTranslation()
-                      .minus(getPose().getTranslation())
-                      .getAngle()
-                      .getRadians()),
-              false,
+              chassisSpeeds.vxMetersPerSecond,
+              chassisSpeeds.vyMetersPerSecond,
+              chassisSpeeds.omegaRadiansPerSecond,
+              true,
               true);
         },
         () -> drive(0, 0, 0, false, false),
@@ -239,20 +244,6 @@ public class Drivetrain extends SubsystemBase {
                             ? Rotation2d.fromDegrees(0)
                             : Rotation2d.fromDegrees(180)))
             : new ChassisSpeeds(xSpeedCommanded, ySpeedCommanded, rotationCommanded));
-  }
-
-  public Command orbitAroundReef(DoubleSupplier ySpeed) {
-    return orbit(
-        () ->
-            new Pose2d(
-                Units.inchesToMeters(
-                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
-                        ? 176.75
-                        : 460.5866666666 - 176.75),
-                Units.inchesToMeters(158.50),
-                new Rotation2d(0)),
-        ySpeed,
-        () -> Units.inchesToMeters(65.5 / 2.0 + 27.5 / 2.0 + 15.0));
   }
 
   /** Sets the wheels into an X formation to prevent movement. */

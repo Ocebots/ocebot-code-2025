@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -20,6 +22,9 @@ public class Coral extends SubsystemBase {
     new Rotation2d(0.0), new Rotation2d(0.0), new Rotation2d(0.0), new Rotation2d(0.0)
   };
 
+  public Coral() {
+    movementController.setTolerance(CoralConfig.POSITION_TOLERANCE, CoralConfig.VELOCITY_TOLERANCE);
+  }
   public Command l1Score() {
     return coralPivot
         .setPivotAngle(() -> coralRotations[0])
@@ -57,21 +62,60 @@ public class Coral extends SubsystemBase {
   }
 
   public Command goToReef(Drivetrain drivetrain, IntSupplier idx) {
-    return drivetrain.orbit(
-        Positions::getReef,
-        () ->
-            movementController.calculate(
-                drivetrain
-                    .getPose()
-                    .getTranslation()
-                    .minus(Positions.getReef().getTranslation())
-                    .getAngle()
-                    .getRadians(),
-                Positions.getIndividualReef(idx.getAsInt())
-                    .getTranslation()
-                    .minus(Positions.getReef().getTranslation())
-                    .getAngle()
-                    .getRadians()),
-        () -> CoralConfig.MOVEMENT_DISTANCE);
+    return drivetrain
+        .orbit(
+            Positions::getReef,
+            () ->
+                movementController.calculate(
+                    drivetrain
+                        .getPose()
+                        .getTranslation()
+                        .minus(Positions.getReef().getTranslation())
+                        .getAngle()
+                        .getRadians(),
+                    Positions.getIndividualReef(idx.getAsInt())
+                        .getTranslation()
+                        .minus(Positions.getReef().getTranslation())
+                        .getAngle()
+                        .getRadians()),
+            () -> CoralConfig.MOVEMENT_DISTANCE)
+        .until(movementController::atSetpoint)
+        .andThen(
+            Commands.runEnd(
+                    () -> {
+                      double distance =
+                          drivetrain
+                              .getPose()
+                              .getTranslation()
+                              .minus(Positions.getIndividualReef(idx.getAsInt()).getTranslation())
+                              .getNorm();
+                      Rotation2d targetRotation =
+                          Rotation2d.fromDegrees(
+                              60.0 * (double) (idx.getAsInt() / 2)
+                                  + (DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)
+                                          == DriverStation.Alliance.Blue
+                                      ? 180.0
+                                      : 0.0));
+                      Translation2d direction =
+                          Positions.getReef()
+                              .getTranslation()
+                              .minus(drivetrain.getPose().getTranslation());
+                      direction =
+                          direction
+                              .div(direction.getNorm())
+                              .times(drivetrain.orbitDistanceController.calculate(distance, 0));
+                      drivetrain.drive(
+                          direction.getX(),
+                          direction.getY(),
+                          drivetrain.orbitRotationController.calculate(
+                              drivetrain.getHeading().getRadians(), targetRotation.getRadians()),
+                          true,
+                          true);
+                    },
+                    () -> drivetrain.drive(0, 0, 0, false, false))
+                .until(
+                    () ->
+                        drivetrain.orbitRotationController.atSetpoint()
+                            && drivetrain.orbitDistanceController.atSetpoint()));
   }
 }
