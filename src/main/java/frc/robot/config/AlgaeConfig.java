@@ -8,7 +8,8 @@ public class AlgaeConfig {
   public static final int ARM_CURRENT_LIMIT = 30;
   public static final SparkBaseConfig.IdleMode WHEELS_IDLEMODE = SparkBaseConfig.IdleMode.kBrake;
   public static final SparkBaseConfig.IdleMode ARM_IDLEMODE = SparkBaseConfig.IdleMode.kBrake;
-  public static final double ENCODER_POSITION_CONVERSION_FACTOR = 2.0 * Math.PI * 40.0 / 66.0 / 9.0 / 5.0;
+  public static final double ENCODER_POSITION_CONVERSION_FACTOR =
+      2.0 * Math.PI * 40.0 / 66.0 / 9.0 / 5.0;
   public static final double ENCODER_VELOCITY_CONVERSION_FACTOR =
       ENCODER_POSITION_CONVERSION_FACTOR / 60;
   public static final double ARM_P = 5.0;

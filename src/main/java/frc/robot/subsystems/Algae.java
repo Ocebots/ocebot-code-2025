@@ -37,7 +37,8 @@ public class Algae extends SubsystemBase {
     arm.configure(
         new SparkMaxConfig()
             .smartCurrentLimit(AlgaeConfig.ARM_CURRENT_LIMIT)
-            .idleMode(AlgaeConfig.ARM_IDLEMODE).inverted(true)
+            .idleMode(AlgaeConfig.ARM_IDLEMODE)
+            .inverted(true)
             .apply(
                 new EncoderConfig()
                     .positionConversionFactor(AlgaeConfig.ENCODER_POSITION_CONVERSION_FACTOR)
