@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -11,6 +12,7 @@ import frc.robot.config.CoralConfig;
 import frc.robot.config.Positions;
 import java.util.function.IntSupplier;
 
+@Logged
 public class Coral extends SubsystemBase {
   private CoralGrabber grabber = new CoralGrabber();
   private Elevator elevator = new Elevator();
