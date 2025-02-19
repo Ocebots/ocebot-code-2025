@@ -22,7 +22,7 @@ public class RobotContainer {
   private Algae algae = new Algae();
   private Coral coral = new Coral();
   private CommandXboxController controller = new CommandXboxController(0);
-  private CommandGenericHID totalController = new CommandGenericHID(0);
+  private CommandGenericHID totalController = new CommandGenericHID(1);
   private int lastButtonPressed;
   private int elevatorLevel = 0;
 
