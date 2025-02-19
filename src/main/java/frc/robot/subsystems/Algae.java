@@ -6,6 +6,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -15,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.AlgaeConfig;
 import frc.robot.config.CANMappings;
 
+@Logged
 public class Algae extends SubsystemBase {
   private SparkMax wheels = new SparkMax(CANMappings.ALGAE_WHEEL_ID, MotorType.kBrushless);
   private SparkMax arm = new SparkMax(CANMappings.ALGAE_ARM_ID, MotorType.kBrushless);
@@ -36,6 +38,7 @@ public class Algae extends SubsystemBase {
         new SparkMaxConfig()
             .smartCurrentLimit(AlgaeConfig.ARM_CURRENT_LIMIT)
             .idleMode(AlgaeConfig.ARM_IDLEMODE)
+            .inverted(true)
             .apply(
                 new EncoderConfig()
                     .positionConversionFactor(AlgaeConfig.ENCODER_POSITION_CONVERSION_FACTOR)
@@ -43,6 +46,7 @@ public class Algae extends SubsystemBase {
         SparkBase.ResetMode.kResetSafeParameters,
         SparkBase.PersistMode.kPersistParameters);
     armController.setTolerance(AlgaeConfig.POSITION_TOLERANCE, AlgaeConfig.VELOCITY_TOLERANCE);
+    armEncoder.setPosition(Math.PI);
   }
 
   private Command armAngChange(Rotation2d angle) {
