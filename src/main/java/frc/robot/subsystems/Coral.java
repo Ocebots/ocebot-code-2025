@@ -32,7 +32,7 @@ public class Coral extends SubsystemBase {
     return coralPivot
         .setPivotAngle(() -> coralRotations[0])
         .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[0]))
-        .alongWith(
+        .withDeadline(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
   }
@@ -41,7 +41,7 @@ public class Coral extends SubsystemBase {
     return coralPivot
         .setPivotAngle(() -> coralRotations[1])
         .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[1]))
-        .alongWith(
+        .withDeadline(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
   }
@@ -50,7 +50,7 @@ public class Coral extends SubsystemBase {
     return coralPivot
         .setPivotAngle(() -> coralRotations[2])
         .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[2]))
-        .alongWith(
+        .withDeadline(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
   }
@@ -59,7 +59,7 @@ public class Coral extends SubsystemBase {
     return coralPivot
         .setPivotAngle(() -> coralRotations[3])
         .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[3]))
-        .alongWith(
+        .withDeadline(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
   }
@@ -120,5 +120,14 @@ public class Coral extends SubsystemBase {
                     () ->
                         drivetrain.orbitRotationController.atSetpoint()
                             && drivetrain.orbitDistanceController.atSetpoint()));
+  }
+
+  public Command pickUpCoral() {
+    return elevator
+        .setElevatorHeight(() -> CoralConfig.INTAKE_HEIGHT)
+        .alongWith(coralPivot.setPivotAngle(() -> CoralConfig.INTAKE_ANGLE))
+        .withDeadline(
+            Commands.waitUntil(elevator::isAtPosition)
+                .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.grabCoral()));
   }
 }
