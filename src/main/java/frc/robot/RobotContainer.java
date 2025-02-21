@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.config.ControllerConfig;
 import frc.robot.subsystems.Algae;
 import frc.robot.subsystems.Coral;
+import frc.robot.subsystems.CoralGrabber;
 import frc.robot.subsystems.Drivetrain;
 
 @Logged
@@ -21,6 +22,7 @@ public class RobotContainer {
   private Drivetrain drivetrain = new Drivetrain();
   private Algae algae = new Algae();
   private Coral coral = new Coral();
+  private CoralGrabber coralGrabber = new CoralGrabber();
   private CommandXboxController controller = new CommandXboxController(0);
   private CommandGenericHID totalController = new CommandGenericHID(1);
   private int lastButtonPressed;
@@ -47,6 +49,8 @@ public class RobotContainer {
                     }
                   }
                 }));
+
+    controller.x().whileTrue(coral.pickUpCoral());
 
     totalController
         .button(15)
