@@ -12,10 +12,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.config.ControllerConfig;
-import frc.robot.subsystems.Algae;
-import frc.robot.subsystems.Coral;
-import frc.robot.subsystems.CoralGrabber;
-import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.*;
 
 @Logged
 public class RobotContainer {
@@ -25,6 +22,7 @@ public class RobotContainer {
   private CoralGrabber coralGrabber = new CoralGrabber();
   private CommandXboxController controller = new CommandXboxController(0);
   private CommandGenericHID totalController = new CommandGenericHID(1);
+  private ClimbPivot climbPivot = new ClimbPivot();
   private int lastButtonPressed;
   private int elevatorLevel = 0;
 
@@ -51,6 +49,9 @@ public class RobotContainer {
                 }));
 
     controller.x().whileTrue(coral.pickUpCoral());
+
+    controller.rightTrigger().whileTrue(climbPivot.pivotClimb());
+    controller.leftTrigger().whileTrue(climbPivot.pivotRelease());
 
     totalController
         .button(15)
