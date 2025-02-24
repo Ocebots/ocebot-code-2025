@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import static frc.robot.subsystems.Vision.camera;
+
 import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
@@ -27,8 +29,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.CANMappings;
 import frc.robot.config.DrivetrainConfig;
 import frc.robot.config.OrbitConfig;
+import frc.robot.config.VisionConfig;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.photonvision.PhotonPoseEstimator;
 
 @Logged
 public class Drivetrain extends SubsystemBase {
@@ -63,6 +67,10 @@ public class Drivetrain extends SubsystemBase {
   public final PIDController orbitRotationController =
       new PIDController(
           OrbitConfig.ORBIT_ROTATION_P, OrbitConfig.ORBIT_ROTATION_I, OrbitConfig.ORBIT_ROTATION_D);
+
+  private PhotonPoseEstimator vision =
+      new PhotonPoseEstimator(
+          VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.CAMERA_POSITION);
 
   // The gyro sensor
   @NotLogged private final AHRS gyro = new AHRS(AHRS.NavXComType.kMXP_SPI);
@@ -148,6 +156,7 @@ public class Drivetrain extends SubsystemBase {
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
+
     field.setRobotPose(
         this.poseEstimator.update(
             getHeading(),
@@ -157,6 +166,15 @@ public class Drivetrain extends SubsystemBase {
               this.rearLeft.getPosition(),
               this.rearRight.getPosition()
             }));
+
+    vision.setReferencePose(this.poseEstimator.getEstimatedPosition());
+
+    vision
+        .update(camera.getAllUnreadResults().get(camera.getAllUnreadResults().size() - 1))
+        .ifPresent(
+            (pose) ->
+                this.poseEstimator.addVisionMeasurement(
+                    pose.estimatedPose.toPose2d(), pose.timestampSeconds));
   }
 
   /**
