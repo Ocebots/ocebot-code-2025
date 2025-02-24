@@ -50,8 +50,8 @@ public class RobotContainer {
 
     controller.x().whileTrue(coral.pickUpCoral());
 
-    controller.rightTrigger().whileTrue(climbPivot.pivotClimb());
-    controller.leftTrigger().whileTrue(climbPivot.pivotRelease());
+    controller.povUp().whileTrue(climbPivot.pivotClimb());
+    controller.povDown().whileTrue(climbPivot.pivotRelease());
 
     totalController
         .button(15)
