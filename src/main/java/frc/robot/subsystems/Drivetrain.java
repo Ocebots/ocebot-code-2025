@@ -70,7 +70,7 @@ public class Drivetrain extends SubsystemBase {
 
   private PhotonPoseEstimator vision =
       new PhotonPoseEstimator(
-          VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.CAMERA_POSTION);
+          VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.CAMERA_POSITION);
 
   // The gyro sensor
   @NotLogged private final AHRS gyro = new AHRS(AHRS.NavXComType.kMXP_SPI);

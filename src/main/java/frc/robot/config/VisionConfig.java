@@ -13,9 +13,6 @@ public class VisionConfig {
       AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
   public static final PhotonPoseEstimator.PoseStrategy STRATEGY =
       PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR;
-  public static final Transform3d CAMERA_POSTION =
+  public static final Transform3d CAMERA_POSITION =
       new Transform3d(0.0, 0.0, 0.0, new Rotation3d(0.0, 0.0, 0.0));
-
-  public static double CAMERA_HEIGHT_METERS = 0.0;
-  public static double CAMERA_PITCH_RADIANS = 0.0;
 }
