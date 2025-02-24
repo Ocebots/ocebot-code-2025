@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import static frc.robot.subsystems.Vision.camera;
+
 import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
@@ -154,6 +156,7 @@ public class Drivetrain extends SubsystemBase {
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
+
     field.setRobotPose(
         this.poseEstimator.update(
             getHeading(),
@@ -167,7 +170,7 @@ public class Drivetrain extends SubsystemBase {
     vision.setReferencePose(this.poseEstimator.getEstimatedPosition());
 
     vision
-        .update()
+        .update(camera.getAllUnreadResults().get(camera.getAllUnreadResults().size() - 1))
         .ifPresent(
             (pose) ->
                 this.poseEstimator.addVisionMeasurement(
