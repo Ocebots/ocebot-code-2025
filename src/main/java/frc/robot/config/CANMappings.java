@@ -10,13 +10,13 @@ public class CANMappings {
   public static final int REAR_RIGHT_TURNING = 2;
   public static final int FRONT_RIGHT_TURNING = 8;
 
-  public static final int END_EFFECTOR_ID = 0;
+  public static final int END_EFFECTOR_ID = 17;
   public static final int ALGAE_WHEEL_ID = 13;
   public static final int ALGAE_ARM_ID = 12;
 
   public static final int ELEVATOR_L_ID = 10; // red tape
   public static final int ELEVATOR_R_ID = 11;
 
-  public static final int CORAL_PIVOT_ID = 0;
-  public static final int CLIMB_PIVOT_ID = 0;
+  public static final int CORAL_PIVOT_ID = 16;
+  public static final int CLIMB_PIVOT_ID = 14;
 }
