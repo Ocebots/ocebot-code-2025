@@ -19,49 +19,55 @@ public class Coral extends SubsystemBase {
   private PIDController movementController =
       new PIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D);
   private CoralPivot coralPivot = new CoralPivot();
-  private double[] elevatorHeights = {0.0, 0.46, 0.81, 1.21};
+  private double[] elevatorHeights = {0.4, 0.5, 0.6, 0.7};
   private Rotation2d[] coralRotations = {
-    new Rotation2d(0.0), new Rotation2d(0.0), new Rotation2d(0.0), new Rotation2d(0.0)
+    Rotation2d.fromDegrees(-30.0),
+    Rotation2d.fromDegrees(0.0),
+    Rotation2d.fromDegrees(30.0),
+    Rotation2d.fromDegrees(60.0)
   };
 
   public Coral() {
     movementController.setTolerance(CoralConfig.POSITION_TOLERANCE, CoralConfig.VELOCITY_TOLERANCE);
+    elevator.setDefaultCommand(elevator.setElevatorHeight(() -> 0.0));
+    coralPivot.setDefaultCommand(coralPivot.setPivotAngle(() -> Rotation2d.fromDegrees(75)));
+    grabber.setDefaultCommand(
+        Commands.run(
+            () -> {
+              if (!elevator.isAtPosition() || !coralPivot.isPivotReady()) {
+                grabber.run();
+              } else {
+                grabber.stop();
+              }
+            },
+            grabber));
+  }
+
+  private Command score(int idx) {
+    return coralPivot
+        .setPivotAngle(() -> coralRotations[idx])
+        .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[idx]))
+        .withDeadline(
+            Commands.waitUntil(elevator::isAtPosition)
+                .andThen(Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(0.4))
+                .deadlineFor(grabber.grabCoralRaw())
+                .andThen(grabber.releaseCoral()));
   }
 
   public Command l1Score() {
-    return coralPivot
-        .setPivotAngle(() -> coralRotations[0])
-        .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[0]))
-        .withDeadline(
-            Commands.waitUntil(elevator::isAtPosition)
-                .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
+    return score(0);
   }
 
   public Command l2Score() {
-    return coralPivot
-        .setPivotAngle(() -> coralRotations[1])
-        .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[1]))
-        .withDeadline(
-            Commands.waitUntil(elevator::isAtPosition)
-                .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
+    return score(1);
   }
 
   public Command l3Score() {
-    return coralPivot
-        .setPivotAngle(() -> coralRotations[2])
-        .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[2]))
-        .withDeadline(
-            Commands.waitUntil(elevator::isAtPosition)
-                .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
+    return score(2);
   }
 
   public Command l4Score() {
-    return coralPivot
-        .setPivotAngle(() -> coralRotations[3])
-        .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[3]))
-        .withDeadline(
-            Commands.waitUntil(elevator::isAtPosition)
-                .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.releaseCoral()));
+    return score(3);
   }
 
   public Command goToReef(Drivetrain drivetrain, IntSupplier idx) {
