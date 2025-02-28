@@ -76,6 +76,10 @@ public class Algae extends SubsystemBase {
         .withDeadline(waitUntilArmReady());
   }
 
+  public Command idleAlgae() {
+    return armAngChange(AlgaeConfig.IDLE_ANGLE);
+  }
+
   public Command releaseAlgae() {
     return wheelsMove(-AlgaeConfig.INTAKE_SPEED).withTimeout(AlgaeConfig.RELEASE_TIME);
   }
