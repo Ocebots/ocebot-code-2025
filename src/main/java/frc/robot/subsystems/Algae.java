@@ -46,7 +46,7 @@ public class Algae extends SubsystemBase {
         SparkBase.ResetMode.kResetSafeParameters,
         SparkBase.PersistMode.kPersistParameters);
     armController.setTolerance(AlgaeConfig.POSITION_TOLERANCE, AlgaeConfig.VELOCITY_TOLERANCE);
-    armEncoder.setPosition(Math.PI);
+    armEncoder.setPosition(0.0);
   }
 
   private Command armAngChange(Rotation2d angle) {

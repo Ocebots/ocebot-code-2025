@@ -11,7 +11,6 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -41,6 +40,8 @@ public class Elevator extends SubsystemBase {
           constraints,
           ElevatorConfig.EL_PERIOD);
 
+  private double lastHeight = 0;
+
   public Elevator() {
     elevator.configure(
         new SparkFlexConfig()
@@ -63,43 +64,25 @@ public class Elevator extends SubsystemBase {
         ElevatorConfig.POSITION_TOLERANCE, ElevatorConfig.VELOCITY_TOLERANCE);
   }
 
-  double lastHeight = 0.0;
-  Timer timer = new Timer();
-
   public Command setElevatorHeight(DoubleSupplier height) {
     return Commands.runEnd(
         () -> {
-          double targetHeight = height.getAsDouble();
-          if (targetHeight != lastHeight) {
-            lastHeight = targetHeight;
-            timer.reset();
-            timer.start();
-          }
-
           TrapezoidProfile.State state =
               profile.calculate(
-                  timer.get(),
+                  TimedRobot.kDefaultPeriod,
                   new TrapezoidProfile.State(
                       elevatorEncoder.getPosition(), elevatorEncoder.getVelocity()),
-                  new TrapezoidProfile.State(targetHeight, 0));
+                  new TrapezoidProfile.State((lastHeight = height.getAsDouble()), 0));
 
           elevator.setVoltage(
               elevatorController.calculate(elevatorEncoder.getPosition(), state.position)
                   + elevatorFF.calculate(state.velocity));
         },
-        () -> {
-          elevator.stopMotor();
-          timer.stop();
-        },
+        () -> elevator.stopMotor(),
         this);
   }
 
-  @Logged
-  public double getTimer() {
-    return timer.get();
-  }
-
   public boolean isAtPosition() {
-    return profile.isFinished(TimedRobot.kDefaultPeriod);
+    return Math.abs(elevatorEncoder.getPosition() - lastHeight) < ElevatorConfig.POSITION_TOLERANCE;
   }
 }
