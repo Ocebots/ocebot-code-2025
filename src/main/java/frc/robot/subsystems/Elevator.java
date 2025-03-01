@@ -8,7 +8,7 @@ import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
@@ -26,15 +26,20 @@ public class Elevator extends SubsystemBase {
   private SparkFlex elevatorFollower =
       new SparkFlex(CANMappings.ELEVATOR_R_ID, SparkLowLevel.MotorType.kBrushless);
   private RelativeEncoder elevatorEncoder = elevator.getEncoder();
-  private PIDController elevatorController =
-      new PIDController(ElevatorConfig.EL_P, ElevatorConfig.EL_I, ElevatorConfig.EL_D);
   private ElevatorFeedforward elevatorFF =
       new ElevatorFeedforward(
           ElevatorConfig.EL_S, ElevatorConfig.EL_G, ElevatorConfig.EL_V, ElevatorConfig.EL_A);
-  private TrapezoidProfile profile =
-      new TrapezoidProfile(
-          new TrapezoidProfile.Constraints(
-              ElevatorConfig.MAX_VELOCITY, ElevatorConfig.MAX_ACCELERATION));
+  private TrapezoidProfile.Constraints constraints =
+      new TrapezoidProfile.Constraints(
+          ElevatorConfig.MAX_VELOCITY, ElevatorConfig.MAX_ACCELERATION);
+  private TrapezoidProfile profile = new TrapezoidProfile(constraints);
+  private ProfiledPIDController elevatorController =
+      new ProfiledPIDController(
+          ElevatorConfig.EL_P,
+          ElevatorConfig.EL_I,
+          ElevatorConfig.EL_D,
+          constraints,
+          ElevatorConfig.EL_PERIOD);
 
   public Elevator() {
     elevator.configure(
