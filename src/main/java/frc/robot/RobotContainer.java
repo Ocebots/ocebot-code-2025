@@ -21,8 +21,9 @@ public class RobotContainer {
   private CommandXboxController controller = new CommandXboxController(0);
   private CommandGenericHID totalController = new CommandGenericHID(1);
   private Drivetrain drivetrain = new Drivetrain();
-  private Command pickup = coral.pickUpCoral();
-  private double speedMultiplier = 1.0;
+  private Command pickup =
+      coral.pickUpCoral().andThen(Commands.runOnce(() -> speedMultiplier = 0.5));
+  private double speedMultiplier = 0.5;
 
   public RobotContainer() {
     configureBindings();
@@ -36,7 +37,7 @@ public class RobotContainer {
                 () -> {
                   if (pickup.isScheduled()) {
                     pickup.cancel();
-                    speedMultiplier = 1.0;
+                    speedMultiplier = 0.5;
                   } else {
                     pickup.schedule();
                     speedMultiplier = 0.2;
@@ -68,6 +69,9 @@ public class RobotContainer {
                     true,
                     true),
             drivetrain));
+
+    controller.povUp().whileTrue(climb.pivotClimb());
+    controller.povDown().whileTrue(climb.pivotRelease());
   }
 
   private double applyDeadband(double value) {

@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import static frc.robot.subsystems.Vision.camera;
-
 import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
@@ -170,7 +168,8 @@ public class Drivetrain extends SubsystemBase {
     vision.setReferencePose(this.poseEstimator.getEstimatedPosition());
 
     vision
-        .update(camera.getAllUnreadResults().get(camera.getAllUnreadResults().size() - 1))
+        .update(
+            Vision.camera.getAllUnreadResults().get(Vision.camera.getAllUnreadResults().size() - 1))
         .ifPresent(
             (pose) ->
                 this.poseEstimator.addVisionMeasurement(
