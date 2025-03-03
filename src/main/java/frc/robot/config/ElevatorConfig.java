@@ -11,7 +11,6 @@ public class ElevatorConfig {
   public static final double EL_G = 0.0;
   public static final double EL_V = 0.0;
   public static final double EL_A = 0.0;
-  public static final double EL_PERIOD = 0.2;
   public static final int ELEVATOR_CURRENT_LIMIT = 40;
   public static final SparkBaseConfig.IdleMode ELEVATOR_IDLE_MODE = SparkBaseConfig.IdleMode.kBrake;
   public static final double ENCODER_POSITION_CONVERSION_FACTOR =

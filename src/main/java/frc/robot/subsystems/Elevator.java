@@ -28,19 +28,14 @@ public class Elevator extends SubsystemBase {
   private ElevatorFeedforward elevatorFF =
       new ElevatorFeedforward(
           ElevatorConfig.EL_S, ElevatorConfig.EL_G, ElevatorConfig.EL_V, ElevatorConfig.EL_A);
-  private TrapezoidProfile.Constraints constraints =
-      new TrapezoidProfile.Constraints(
-          ElevatorConfig.MAX_VELOCITY, ElevatorConfig.MAX_ACCELERATION);
-  private TrapezoidProfile profile = new TrapezoidProfile(constraints);
   private ProfiledPIDController elevatorController =
       new ProfiledPIDController(
           ElevatorConfig.EL_P,
           ElevatorConfig.EL_I,
           ElevatorConfig.EL_D,
-          constraints,
-          ElevatorConfig.EL_PERIOD);
-
-  private double lastHeight = 0;
+          new TrapezoidProfile.Constraints(
+              ElevatorConfig.MAX_VELOCITY, ElevatorConfig.MAX_ACCELERATION),
+          TimedRobot.kDefaultPeriod);
 
   public Elevator() {
     elevator.configure(
@@ -67,22 +62,15 @@ public class Elevator extends SubsystemBase {
   public Command setElevatorHeight(DoubleSupplier height) {
     return Commands.runEnd(
         () -> {
-          TrapezoidProfile.State state =
-              profile.calculate(
-                  TimedRobot.kDefaultPeriod,
-                  new TrapezoidProfile.State(
-                      elevatorEncoder.getPosition(), elevatorEncoder.getVelocity()),
-                  new TrapezoidProfile.State((lastHeight = height.getAsDouble()), 0));
-
           elevator.setVoltage(
-              elevatorController.calculate(elevatorEncoder.getPosition(), state.position)
-                  + elevatorFF.calculate(state.velocity));
+              elevatorController.calculate(elevatorEncoder.getPosition(), height.getAsDouble())
+                  + elevatorFF.calculate(elevatorController.getSetpoint().velocity));
         },
         () -> elevator.stopMotor(),
         this);
   }
 
   public boolean isAtPosition() {
-    return Math.abs(elevatorEncoder.getPosition() - lastHeight) < ElevatorConfig.POSITION_TOLERANCE;
+    return elevatorController.atGoal();
   }
 }

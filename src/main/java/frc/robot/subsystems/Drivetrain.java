@@ -22,15 +22,13 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.config.CANMappings;
-import frc.robot.config.DrivetrainConfig;
-import frc.robot.config.OrbitConfig;
-import frc.robot.config.VisionConfig;
+import frc.robot.config.*;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.photonvision.PhotonPoseEstimator;
@@ -62,27 +60,22 @@ public class Drivetrain extends SubsystemBase {
           CANMappings.REAR_RIGHT_TURNING,
           DrivetrainConfig.BACK_RIGHT_CHASSIS_ANGULAR_OFFSET);
 
-  private TrapezoidProfile.Constraints distanceControllerConstraints =
-      new TrapezoidProfile.Constraints(
-          OrbitConfig.ORBIT_DISTANCE_MAX_VELOCITY, OrbitConfig.ORBIT_DISTANCE_MAX_ACCELERATION);
-  private TrapezoidProfile.Constraints rotationControllerConstraints =
-      new TrapezoidProfile.Constraints(
-          OrbitConfig.ORBIT_ROTATION_MAX_VELOCITY, OrbitConfig.ORBIT_ROTATION_MAX_ACCELERATION);
-
   public final ProfiledPIDController orbitDistanceController =
       new ProfiledPIDController(
           OrbitConfig.ORBIT_DISTANCE_P,
           OrbitConfig.ORBIT_DISTANCE_I,
           OrbitConfig.ORBIT_DISTANCE_D,
-          distanceControllerConstraints,
-          OrbitConfig.ORBIT_DISTANCE_PERIOD);
+          new TrapezoidProfile.Constraints(
+              OrbitConfig.ORBIT_DISTANCE_MAX_VELOCITY, OrbitConfig.ORBIT_DISTANCE_MAX_ACCELERATION),
+          TimedRobot.kDefaultPeriod);
   public final ProfiledPIDController orbitRotationController =
       new ProfiledPIDController(
           OrbitConfig.ORBIT_ROTATION_P,
           OrbitConfig.ORBIT_ROTATION_I,
           OrbitConfig.ORBIT_ROTATION_D,
-          rotationControllerConstraints,
-          OrbitConfig.ORBIT_ROTATION_PERIOD);
+          new TrapezoidProfile.Constraints(
+              OrbitConfig.ORBIT_ROTATION_MAX_VELOCITY, OrbitConfig.ORBIT_ROTATION_MAX_ACCELERATION),
+          TimedRobot.kDefaultPeriod);
 
   private PhotonPoseEstimator vision =
       new PhotonPoseEstimator(
@@ -215,15 +208,10 @@ public class Drivetrain extends SubsystemBase {
                       relativeTransform.getTranslation().getNorm(), distance.getAsDouble()),
                   speed.getAsDouble(),
                   orbitRotationController.calculate(
-                      getHeading().getRadians(), targetAngle.getRadians()),
+                      getHeading().getRadians(), new TrapezoidProfile.State(targetAngle.getRadians(), speed.getAsDouble() / distance.getAsDouble())),
                   targetAngle);
 
-          drive(
-              chassisSpeeds.vxMetersPerSecond,
-              chassisSpeeds.vyMetersPerSecond,
-              chassisSpeeds.omegaRadiansPerSecond,
-              true,
-              true);
+          setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
         },
         () -> drive(0, 0, 0, false, false),
         this);
