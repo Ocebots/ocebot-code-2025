@@ -62,6 +62,11 @@ public class Algae extends SubsystemBase {
     return Commands.runEnd(() -> wheels.set(speed), () -> wheels.stopMotor(), this);
   }
 
+  @Logged
+  public boolean isReady() {
+    return armController.atSetpoint();
+  }
+
   private Command waitUntilArmReady() {
     return Commands.waitUntil(() -> armController.atSetpoint());
   }
@@ -73,7 +78,7 @@ public class Algae extends SubsystemBase {
   public Command storeAlgae() {
     return armAngChange(AlgaeConfig.STORE_ANGLE)
         .alongWith(wheelsMove(AlgaeConfig.INTAKE_SPEED))
-        .withDeadline(waitUntilArmReady());
+        .withDeadline(Commands.waitSeconds(1.0).andThen(waitUntilArmReady()));
   }
 
   public Command releaseAlgae() {

@@ -4,9 +4,9 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 public class CoralPivotConfig {
-  public static final double PIVOT_P = 5.5;
+  public static final double PIVOT_P = 0.4;
   public static final double PIVOT_I = 0.0;
-  public static final double PIVOT_D = 0.0;
+  public static final double PIVOT_D = 0.1;
   public static final double PIVOT_S = 0.5;
   public static final double PIVOT_G = 0.5;
   public static final double PIVOT_V = 0.0;

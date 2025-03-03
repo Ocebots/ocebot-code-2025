@@ -6,9 +6,6 @@ package frc.robot;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
@@ -20,6 +17,7 @@ import frc.robot.subsystems.*;
 public class RobotContainer {
   private ClimbPivot climb = new ClimbPivot();
   private Coral coral = new Coral();
+  private Algae algae = new Algae();
   private CommandXboxController controller = new CommandXboxController(0);
   private CommandGenericHID totalController = new CommandGenericHID(1);
   private Drivetrain drivetrain = new Drivetrain();
@@ -30,11 +28,43 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
+    controller
+        .a()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (pickup.isScheduled()) {
+                    pickup.cancel();
+                  } else {
+                    pickup.schedule();
+                  }
+                }));
+
+    controller
+        .b()
+        .onTrue(
+            algae
+                .pickUpAlgae()
+                .until(() -> !controller.b().getAsBoolean())
+                .andThen(algae.storeAlgae()));
+
+    controller.y().onTrue(algae.releaseAlgae());
+
+    totalController.button(15).onTrue(coral.l4Score());
+    totalController.button(16).onTrue(coral.l3Score());
+    totalController.button(17).onTrue(coral.l2Score());
+    totalController.button(18).onTrue(coral.l1Score());
+
     drivetrain.setDefaultCommand(
-        drivetrain.orbit(
-            () -> new Pose2d(new Translation2d(0.5, 0), new Rotation2d()),
-            () -> applyDeadband(controller.getLeftX()),
-            () -> 0.5));
+        Commands.run(
+            () ->
+                drivetrain.drive(
+                    applyDeadband(-controller.getLeftY() * 0.5),
+                    applyDeadband(-controller.getLeftX() * 0.5),
+                    applyDeadband(-controller.getRightX() * 0.5),
+                    true,
+                    true),
+            drivetrain));
   }
 
   private double applyDeadband(double value) {

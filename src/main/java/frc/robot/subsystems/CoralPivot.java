@@ -2,13 +2,14 @@ package frc.robot.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.spark.SparkBase;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.AbsoluteEncoderConfig;
+import com.revrobotics.spark.config.ClosedLoopConfig;
+import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -22,15 +23,8 @@ public class CoralPivot extends SubsystemBase {
   private SparkMax pivot =
       new SparkMax(CANMappings.CORAL_PIVOT_ID, SparkLowLevel.MotorType.kBrushless);
   private AbsoluteEncoder pivotEncoder = pivot.getAbsoluteEncoder();
-  private PIDController pivotController =
-      new PIDController(
-          CoralPivotConfig.PIVOT_P, CoralPivotConfig.PIVOT_I, CoralPivotConfig.PIVOT_D);
-  private ArmFeedforward pivotFF =
-      new ArmFeedforward(
-          CoralPivotConfig.PIVOT_S,
-          CoralPivotConfig.PIVOT_G,
-          CoralPivotConfig.PIVOT_V,
-          CoralPivotConfig.PIVOT_A);
+
+  private Rotation2d lastAngle = new Rotation2d();
 
   public CoralPivot() {
     pivot.configure(
@@ -40,25 +34,34 @@ public class CoralPivot extends SubsystemBase {
             .apply(
                 new AbsoluteEncoderConfig()
                     .positionConversionFactor(CoralPivotConfig.ENCODER_POSITION_CONVERSION_FACTOR)
-                    .velocityConversionFactor(CoralPivotConfig.ENCODER_VELOCITY_CONVERSION_FACTOR)),
+                    .velocityConversionFactor(CoralPivotConfig.ENCODER_VELOCITY_CONVERSION_FACTOR))
+            .apply(
+                new ClosedLoopConfig()
+                    .pid(
+                        CoralPivotConfig.PIVOT_P,
+                        CoralPivotConfig.PIVOT_I,
+                        CoralPivotConfig.PIVOT_D)
+                    .positionWrappingEnabled(true)
+                    .positionWrappingMinInput(-Math.PI)
+                    .positionWrappingMaxInput(Math.PI)
+                    .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)),
         SparkBase.ResetMode.kResetSafeParameters,
         SparkBase.PersistMode.kPersistParameters);
-    pivotController.setTolerance(
-        CoralPivotConfig.POSITION_TOLERANCE, CoralPivotConfig.VELOCITY_TOLERANCE);
-    pivotController.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   public Command setPivotAngle(Supplier<Rotation2d> angle) {
     return Commands.runEnd(
         () ->
-            pivot.setVoltage(
-                pivotController.calculate(pivotEncoder.getPosition(), angle.get().getRadians())
-                    + pivotFF.calculate(angle.get().getRadians(), 0)),
+            pivot
+                .getClosedLoopController()
+                .setReference((lastAngle = angle.get()).getRadians(), ControlType.kPosition),
         () -> pivot.stopMotor(),
         this);
   }
 
   public boolean isPivotReady() {
-    return pivotController.atSetpoint();
+    return Math.abs(pivotEncoder.getPosition() - lastAngle.getRadians())
+            < CoralPivotConfig.POSITION_TOLERANCE
+        && pivotEncoder.getVelocity() < CoralPivotConfig.VELOCITY_TOLERANCE;
   }
 }
