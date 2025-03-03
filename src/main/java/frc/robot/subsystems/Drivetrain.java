@@ -208,7 +208,9 @@ public class Drivetrain extends SubsystemBase {
                       relativeTransform.getTranslation().getNorm(), distance.getAsDouble()),
                   speed.getAsDouble(),
                   orbitRotationController.calculate(
-                      getHeading().getRadians(), new TrapezoidProfile.State(targetAngle.getRadians(), speed.getAsDouble() / distance.getAsDouble())),
+                      getHeading().getRadians(),
+                      new TrapezoidProfile.State(
+                          targetAngle.getRadians(), speed.getAsDouble() / distance.getAsDouble())),
                   targetAngle);
 
           setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
