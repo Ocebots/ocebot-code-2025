@@ -8,7 +8,6 @@ import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -30,16 +29,16 @@ public class Elevator extends SubsystemBase {
       new ElevatorFeedforward(
           ElevatorConfig.EL_S, ElevatorConfig.EL_G, ElevatorConfig.EL_V, ElevatorConfig.EL_A);
   private TrapezoidProfile.Constraints constraints =
-          new TrapezoidProfile.Constraints(
-                  ElevatorConfig.MAX_VELOCITY, ElevatorConfig.MAX_ACCELERATION);
+      new TrapezoidProfile.Constraints(
+          ElevatorConfig.MAX_VELOCITY, ElevatorConfig.MAX_ACCELERATION);
   private TrapezoidProfile profile = new TrapezoidProfile(constraints);
   private ProfiledPIDController elevatorController =
-          new ProfiledPIDController(
-                  ElevatorConfig.EL_P,
-                  ElevatorConfig.EL_I,
-                  ElevatorConfig.EL_D,
-                  constraints,
-                  ElevatorConfig.EL_PERIOD);
+      new ProfiledPIDController(
+          ElevatorConfig.EL_P,
+          ElevatorConfig.EL_I,
+          ElevatorConfig.EL_D,
+          constraints,
+          ElevatorConfig.EL_PERIOD);
 
   private double lastHeight = 0;
 

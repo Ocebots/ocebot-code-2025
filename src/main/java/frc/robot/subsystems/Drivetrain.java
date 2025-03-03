@@ -9,7 +9,6 @@ import static frc.robot.subsystems.Vision.camera;
 import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -64,26 +63,26 @@ public class Drivetrain extends SubsystemBase {
           DrivetrainConfig.BACK_RIGHT_CHASSIS_ANGULAR_OFFSET);
 
   private TrapezoidProfile.Constraints distanceControllerConstraints =
-          new TrapezoidProfile.Constraints(
-                  OrbitConfig.ORBIT_DISTANCE_MAX_VELOCITY, OrbitConfig.ORBIT_DISTANCE_MAX_ACCELERATION);
+      new TrapezoidProfile.Constraints(
+          OrbitConfig.ORBIT_DISTANCE_MAX_VELOCITY, OrbitConfig.ORBIT_DISTANCE_MAX_ACCELERATION);
   private TrapezoidProfile.Constraints rotationControllerConstraints =
-          new TrapezoidProfile.Constraints(
-                  OrbitConfig.ORBIT_ROTATION_MAX_VELOCITY, OrbitConfig.ORBIT_ROTATION_MAX_ACCELERATION);
+      new TrapezoidProfile.Constraints(
+          OrbitConfig.ORBIT_ROTATION_MAX_VELOCITY, OrbitConfig.ORBIT_ROTATION_MAX_ACCELERATION);
 
   public final ProfiledPIDController orbitDistanceController =
-          new ProfiledPIDController(
-                  OrbitConfig.ORBIT_DISTANCE_P,
-                  OrbitConfig.ORBIT_DISTANCE_I,
-                  OrbitConfig.ORBIT_DISTANCE_D,
-                  distanceControllerConstraints,
-                  OrbitConfig.ORBIT_DISTANCE_PERIOD);
+      new ProfiledPIDController(
+          OrbitConfig.ORBIT_DISTANCE_P,
+          OrbitConfig.ORBIT_DISTANCE_I,
+          OrbitConfig.ORBIT_DISTANCE_D,
+          distanceControllerConstraints,
+          OrbitConfig.ORBIT_DISTANCE_PERIOD);
   public final ProfiledPIDController orbitRotationController =
-          new ProfiledPIDController(
-                  OrbitConfig.ORBIT_ROTATION_P,
-                  OrbitConfig.ORBIT_ROTATION_I,
-                  OrbitConfig.ORBIT_ROTATION_D,
-                  rotationControllerConstraints,
-                  OrbitConfig.ORBIT_ROTATION_PERIOD);
+      new ProfiledPIDController(
+          OrbitConfig.ORBIT_ROTATION_P,
+          OrbitConfig.ORBIT_ROTATION_I,
+          OrbitConfig.ORBIT_ROTATION_D,
+          rotationControllerConstraints,
+          OrbitConfig.ORBIT_ROTATION_PERIOD);
 
   private PhotonPoseEstimator vision =
       new PhotonPoseEstimator(
