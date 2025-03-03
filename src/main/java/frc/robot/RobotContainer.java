@@ -22,6 +22,7 @@ public class RobotContainer {
   private CommandGenericHID totalController = new CommandGenericHID(1);
   private Drivetrain drivetrain = new Drivetrain();
   private Command pickup = coral.pickUpCoral();
+  private double speedMultiplier = 1.0;
 
   public RobotContainer() {
     configureBindings();
@@ -35,8 +36,10 @@ public class RobotContainer {
                 () -> {
                   if (pickup.isScheduled()) {
                     pickup.cancel();
+                    speedMultiplier = 1.0;
                   } else {
                     pickup.schedule();
+                    speedMultiplier = 0.2;
                   }
                 }));
 
@@ -59,9 +62,9 @@ public class RobotContainer {
         Commands.run(
             () ->
                 drivetrain.drive(
-                    applyDeadband(-controller.getLeftY() * 0.5),
-                    applyDeadband(-controller.getLeftX() * 0.5),
-                    applyDeadband(-controller.getRightX() * 0.5),
+                    applyDeadband(-controller.getLeftY() * speedMultiplier),
+                    applyDeadband(-controller.getLeftX() * speedMultiplier),
+                    applyDeadband(-controller.getRightX() * speedMultiplier),
                     true,
                     true),
             drivetrain));
