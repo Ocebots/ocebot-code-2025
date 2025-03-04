@@ -176,13 +176,18 @@ public class Drivetrain extends SubsystemBase {
 
     vision.setReferencePose(this.poseEstimator.getEstimatedPosition());
 
-    vision
-        .update(
-            Vision.camera.getAllUnreadResults().get(Vision.camera.getAllUnreadResults().size() - 1))
-        .ifPresent(
-            (pose) ->
-                this.poseEstimator.addVisionMeasurement(
-                    pose.estimatedPose.toPose2d(), pose.timestampSeconds));
+    // FIXME: This results in -1
+    // if (!Vision.camera.getAllUnreadResults().isEmpty()) {
+    //   vision
+    //       .update(
+    //           Vision.camera
+    //               .getAllUnreadResults()
+    //               .get(Vision.camera.getAllUnreadResults().size() - 1))
+    //       .ifPresent(
+    //           (pose) ->
+    //               this.poseEstimator.addVisionMeasurement(
+    //                   pose.estimatedPose.toPose2d(), pose.timestampSeconds));
+    // }
   }
 
   /**

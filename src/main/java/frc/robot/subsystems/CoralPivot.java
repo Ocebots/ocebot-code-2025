@@ -26,6 +26,11 @@ public class CoralPivot extends SubsystemBase {
 
   private Rotation2d lastAngle = new Rotation2d();
 
+  @Logged
+  public double iAccum() {
+    return pivot.getClosedLoopController().getIAccum();
+  }
+
   public CoralPivot() {
     pivot.configure(
         new SparkMaxConfig()
@@ -44,19 +49,24 @@ public class CoralPivot extends SubsystemBase {
                     .positionWrappingEnabled(true)
                     .positionWrappingMinInput(-Math.PI)
                     .positionWrappingMaxInput(Math.PI)
-                    .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)),
+                    .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
+                    .iMaxAccum(0.02)
+                    .iZone(Rotation2d.fromDegrees(15).getRadians())),
         SparkBase.ResetMode.kResetSafeParameters,
         SparkBase.PersistMode.kPersistParameters);
   }
 
   public Command setPivotAngle(Supplier<Rotation2d> angle) {
-    return Commands.runEnd(
-        () ->
-            pivot
-                .getClosedLoopController()
-                .setReference((lastAngle = angle.get()).getRadians(), ControlType.kPosition),
-        () -> pivot.stopMotor(),
-        this);
+    return Commands.runOnce(() -> pivot.getClosedLoopController().setIAccum(0.0))
+        .andThen(
+            Commands.runEnd(
+                () ->
+                    pivot
+                        .getClosedLoopController()
+                        .setReference(
+                            (lastAngle = angle.get()).getRadians(), ControlType.kPosition),
+                () -> pivot.stopMotor(),
+                this));
   }
 
   public boolean isPivotReady() {

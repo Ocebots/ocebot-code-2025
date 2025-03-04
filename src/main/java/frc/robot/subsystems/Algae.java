@@ -84,4 +84,8 @@ public class Algae extends SubsystemBase {
   public Command releaseAlgae() {
     return wheelsMove(-AlgaeConfig.INTAKE_SPEED).withTimeout(AlgaeConfig.RELEASE_TIME);
   }
+
+  public Command returnToUp() {
+    return armAngChange(Rotation2d.fromRadians(-0.65)).until(armController::atSetpoint);
+  }
 }

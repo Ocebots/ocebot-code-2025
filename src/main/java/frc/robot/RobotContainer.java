@@ -23,6 +23,8 @@ public class RobotContainer {
   private Drivetrain drivetrain = new Drivetrain();
   private Command pickup =
       coral.pickUpCoral().andThen(Commands.runOnce(() -> speedMultiplier = 0.5));
+  private Command pickupSource =
+      coral.pickUpCoralSource().andThen(Commands.runOnce(() -> speedMultiplier = 0.5));
   private double speedMultiplier = 0.5;
 
   public RobotContainer() {
@@ -43,16 +45,29 @@ public class RobotContainer {
                     speedMultiplier = 0.2;
                   }
                 }));
-
     controller
         .b()
         .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (pickupSource.isScheduled()) {
+                    pickupSource.cancel();
+                    speedMultiplier = 0.5;
+                  } else {
+                    pickupSource.schedule();
+                    speedMultiplier = 0.2;
+                  }
+                }));
+
+    controller
+        .rightTrigger()
+        .onTrue(
             algae
                 .pickUpAlgae()
-                .until(() -> !controller.b().getAsBoolean())
+                .until(() -> !controller.rightTrigger().getAsBoolean())
                 .andThen(algae.storeAlgae()));
 
-    controller.y().onTrue(algae.releaseAlgae());
+    controller.y().onTrue(algae.releaseAlgae().andThen(algae.returnToUp()));
 
     totalController.button(15).onTrue(coral.l4Score());
     totalController.button(16).onTrue(coral.l3Score());

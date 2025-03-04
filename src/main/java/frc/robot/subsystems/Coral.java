@@ -50,6 +50,7 @@ public class Coral extends SubsystemBase {
         .withDeadline(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(0.4))
+                .withDeadline(Commands.waitSeconds(1.4))
                 .deadlineFor(grabber.grabCoralRaw())
                 .andThen(grabber.releaseCoral()));
   }
@@ -132,6 +133,15 @@ public class Coral extends SubsystemBase {
     return elevator
         .setElevatorHeight(() -> CoralConfig.INTAKE_HEIGHT)
         .alongWith(coralPivot.setPivotAngle(() -> CoralConfig.INTAKE_ANGLE))
+        .withDeadline(
+            Commands.waitUntil(elevator::isAtPosition)
+                .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.grabCoral()));
+  }
+
+  public Command pickUpCoralSource() {
+    return elevator
+        .setElevatorHeight(() -> CoralConfig.INTAKE_HEIGHT_SOURCE)
+        .alongWith(coralPivot.setPivotAngle(() -> CoralConfig.INTAKE_ANGLE_SOURCE))
         .withDeadline(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.grabCoral()));
