@@ -43,7 +43,7 @@ public class Coral extends SubsystemBase {
             grabber));
   }
 
-  private Command score(int idx) {
+  private Command score(int idx, BooleanSupplier completeScore) {
     return coralPivot
         .setPivotAngle(() -> coralRotations[idx])
         .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[idx]))
@@ -51,24 +51,25 @@ public class Coral extends SubsystemBase {
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(0.4))
                 .withDeadline(Commands.waitSeconds(1.4))
+                .andThen(Commands.waitUntil(completeScore))
                 .deadlineFor(grabber.grabCoralRaw())
                 .andThen(grabber.releaseCoral()));
   }
 
-  public Command l1Score() {
-    return score(0);
+  public Command l1Score(BooleanSupplier completeScore) {
+    return score(0, completeScore);
   }
 
-  public Command l2Score() {
-    return score(1);
+  public Command l2Score(BooleanSupplier completeScore) {
+    return score(1, completeScore);
   }
 
-  public Command l3Score() {
-    return score(2);
+  public Command l3Score(BooleanSupplier completeScore) {
+    return score(2, completeScore);
   }
 
-  public Command l4Score() {
-    return score(3);
+  public Command l4Score(BooleanSupplier completeScore) {
+    return score(3, completeScore);
   }
 
   public Command goToReef(Drivetrain drivetrain, IntSupplier idx) {

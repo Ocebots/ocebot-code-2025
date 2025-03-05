@@ -69,10 +69,10 @@ public class RobotContainer {
 
     controller.y().onTrue(algae.releaseAlgae().andThen(algae.returnToUp()));
 
-    totalController.button(15).onTrue(coral.l4Score());
-    totalController.button(16).onTrue(coral.l3Score());
-    totalController.button(17).onTrue(coral.l2Score());
-    totalController.button(18).onTrue(coral.l1Score());
+    totalController.button(15).onTrue(coral.l4Score(controller.leftTrigger()));
+    totalController.button(16).onTrue(coral.l3Score(controller.leftTrigger()));
+    totalController.button(17).onTrue(coral.l2Score(controller.leftTrigger()));
+    totalController.button(18).onTrue(coral.l1Score(controller.leftTrigger()));
 
     drivetrain.setDefaultCommand(
         Commands.run(
