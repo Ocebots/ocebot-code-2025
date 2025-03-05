@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.CoralConfig;
 import frc.robot.config.Positions;
+import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 
 @Logged
