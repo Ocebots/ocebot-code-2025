@@ -21,6 +21,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -78,6 +79,8 @@ public class Drivetrain extends SubsystemBase {
   private PhotonPoseEstimator vision =
       new PhotonPoseEstimator(
           VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.CAMERA_POSITION);
+
+  Ultrasonic rangeFinder = new Ultrasonic(1, 2);
 
   // The gyro sensor
   @NotLogged private final AHRS gyro = new AHRS(AHRS.NavXComType.kMXP_SPI);
@@ -160,6 +163,10 @@ public class Drivetrain extends SubsystemBase {
     this.rearRight.setDesiredState(swerveModuleStates[3]);
   }
 
+  public double getDistance() {
+    return rangeFinder.getRangeMM();
+  }
+
   @Override
   public void periodic() {
     // Update the odometry in the periodic block
@@ -198,6 +205,24 @@ public class Drivetrain extends SubsystemBase {
   @Logged
   public Pose2d getPose() {
     return this.poseEstimator.getEstimatedPosition();
+  }
+
+  public Command followLine(
+      DoubleSupplier distance, DoubleSupplier speed, Supplier<Rotation2d> rotation) {
+    return Commands.runEnd(
+        () -> {
+          ChassisSpeeds chassisSpeeds =
+              ChassisSpeeds.fromRobotRelativeSpeeds(
+                  -orbitDistanceController.calculate(getDistance(), distance.getAsDouble()),
+                  speed.getAsDouble(),
+                  orbitRotationController.calculate(
+                      getHeading().getRadians(), rotation.get().getRadians()),
+                  rotation.get());
+
+          setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
+        },
+        () -> drive(0, 0, 0, false, false),
+        this);
   }
 
   public Command orbit(Supplier<Pose2d> center, DoubleSupplier speed, DoubleSupplier distance) {
