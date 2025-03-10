@@ -20,13 +20,20 @@ public class Coral extends SubsystemBase {
   private PIDController movementController =
       new PIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D);
   private CoralPivot coralPivot = new CoralPivot();
-  private double[] elevatorHeights = {0.4, 0.5, 0.6, 0.7};
-  private Rotation2d[] coralRotations = {
+  private double[] elevatorScoringHeights = {0.4, 0.5, 0.6, 0.7};
+  private Rotation2d[] coralScoringRotations = {
     Rotation2d.fromDegrees(-30.0),
     Rotation2d.fromDegrees(0.0),
     Rotation2d.fromDegrees(30.0),
     Rotation2d.fromDegrees(60.0)
   };
+  private Rotation2d[] reefClearRotationsPrimary = {
+    Rotation2d.fromDegrees(0.0), Rotation2d.fromDegrees(0.0)
+  };
+  private Rotation2d[] reefClearRotationsSecondary = {
+    Rotation2d.fromDegrees(0.0), Rotation2d.fromDegrees(0.0)
+  };
+  private double[] reefClearHeights = {0.0, 0.0};
 
   public Coral() {
     movementController.setTolerance(CoralConfig.POSITION_TOLERANCE, CoralConfig.VELOCITY_TOLERANCE);
@@ -46,8 +53,8 @@ public class Coral extends SubsystemBase {
 
   private Command score(int idx, BooleanSupplier completeScore) {
     return coralPivot
-        .setPivotAngle(() -> coralRotations[idx])
-        .alongWith(elevator.setElevatorHeight(() -> elevatorHeights[idx]))
+        .setPivotAngle(() -> coralScoringRotations[idx])
+        .alongWith(elevator.setElevatorHeight(() -> elevatorScoringHeights[idx]))
         .withDeadline(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(0.4))
@@ -55,6 +62,19 @@ public class Coral extends SubsystemBase {
                 .andThen(Commands.waitUntil(completeScore))
                 .deadlineFor(grabber.grabCoralRaw())
                 .andThen(grabber.releaseCoral()));
+  }
+
+  private Command reefClear(int idx, BooleanSupplier completeClear) {
+    return coralPivot
+        .setPivotAngle(() -> reefClearRotationsPrimary[idx])
+        .alongWith(elevator.setElevatorHeight(() -> reefClearHeights[idx]))
+        .withDeadline(
+            Commands.waitUntil(elevator::isAtPosition)
+                .andThen(Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(0.4))
+                .withDeadline(Commands.waitSeconds(1.4))
+                .andThen(Commands.waitUntil(completeClear))
+                .andThen(coralPivot.setPivotAngle(() -> reefClearRotationsSecondary[idx]))
+                .alongWith(grabber.removeAlgae()));
   }
 
   public Command l1Score(BooleanSupplier completeScore) {
@@ -71,6 +91,14 @@ public class Coral extends SubsystemBase {
 
   public Command l4Score(BooleanSupplier completeScore) {
     return score(3, completeScore);
+  }
+
+  public Command l1ReefClear(BooleanSupplier completeClear) {
+    return reefClear(0, completeClear);
+  }
+
+  public Command l2ReefClear(BooleanSupplier completeClear) {
+    return reefClear(1, completeClear);
   }
 
   public Command goToReef(Drivetrain drivetrain, IntSupplier idx) {
