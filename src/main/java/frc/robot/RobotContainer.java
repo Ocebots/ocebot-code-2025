@@ -74,6 +74,9 @@ public class RobotContainer {
     totalController.button(17).onTrue(coral.l2Score(controller.leftTrigger()));
     totalController.button(18).onTrue(coral.l1Score(controller.leftTrigger()));
 
+    totalController.button(13).onTrue(coral.l1ReefClear(controller.leftTrigger()));
+    totalController.button(12).onTrue(coral.l2ReefClear(controller.leftTrigger()));
+
     drivetrain.setDefaultCommand(
         Commands.run(
             () ->
