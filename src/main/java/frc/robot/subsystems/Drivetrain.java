@@ -169,6 +169,7 @@ public class Drivetrain extends SubsystemBase {
 
   @Override
   public void periodic() {
+    rangeFinder.ping();
     // Update the odometry in the periodic block
 
     field.setRobotPose(

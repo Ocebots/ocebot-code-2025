@@ -64,7 +64,7 @@ public class CoralGrabber extends SubsystemBase {
   }
 
   public void run() {
-    motor.set(CoralGrabberConfig.GRAB_SPEED);
+    motor.set(0.75);
   }
 
   public void stop() {

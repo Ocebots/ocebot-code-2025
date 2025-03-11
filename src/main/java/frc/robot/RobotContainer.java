@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
@@ -22,12 +23,21 @@ public class RobotContainer {
   private CommandGenericHID totalController = new CommandGenericHID(1);
   private Drivetrain drivetrain = new Drivetrain();
   private Command pickup =
-      coral.pickUpCoral().andThen(Commands.runOnce(() -> speedMultiplier = 0.5));
+      coral
+          .pickUpCoral()
+          .andThen(
+              Commands.runOnce(
+                  () -> {
+                    speedMultiplier = 0.5;
+                    fieldRelative = true;
+                  }));
   private Command pickupSource =
       coral.pickUpCoralSource().andThen(Commands.runOnce(() -> speedMultiplier = 0.5));
   private double speedMultiplier = 0.5;
+  private boolean fieldRelative = true;
 
   public RobotContainer() {
+    DataLogManager.start();
     configureBindings();
   }
 
@@ -38,11 +48,14 @@ public class RobotContainer {
             Commands.runOnce(
                 () -> {
                   if (pickup.isScheduled()) {
+                    pickupSource.cancel();
                     pickup.cancel();
                     speedMultiplier = 0.5;
+                    fieldRelative = true;
                   } else {
                     pickup.schedule();
                     speedMultiplier = 0.2;
+                    fieldRelative = false;
                   }
                 }));
     controller
@@ -52,7 +65,9 @@ public class RobotContainer {
                 () -> {
                   if (pickupSource.isScheduled()) {
                     pickupSource.cancel();
+                    pickup.cancel();
                     speedMultiplier = 0.5;
+                    fieldRelative = true;
                   } else {
                     pickupSource.schedule();
                     speedMultiplier = 0.2;
@@ -74,8 +89,8 @@ public class RobotContainer {
     totalController.button(17).onTrue(coral.l2Score(controller.leftTrigger()));
     totalController.button(18).onTrue(coral.l1Score(controller.leftTrigger()));
 
-    totalController.button(13).onTrue(coral.l1ReefClear(controller.leftTrigger()));
-    totalController.button(12).onTrue(coral.l2ReefClear(controller.leftTrigger()));
+    totalController.button(14).onTrue(coral.l1ReefClear(controller.leftTrigger()));
+    totalController.button(13).onTrue(coral.l2ReefClear(controller.leftTrigger()));
 
     drivetrain.setDefaultCommand(
         Commands.run(
@@ -84,7 +99,7 @@ public class RobotContainer {
                     applyDeadband(-controller.getLeftY() * speedMultiplier),
                     applyDeadband(-controller.getLeftX() * speedMultiplier),
                     applyDeadband(-controller.getRightX() * speedMultiplier),
-                    true,
+                    fieldRelative,
                     true),
             drivetrain));
 

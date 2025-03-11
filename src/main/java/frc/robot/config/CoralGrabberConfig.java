@@ -13,6 +13,6 @@ public class CoralGrabberConfig {
   public static final double FILTER_TIME_CONSTANT = 0.3;
   public static final double TRIGGER_CURRENT = 12; // amps
 
-  public static final double ALGAE_REMOVAL_TIME = 0.5; // seconds
+  public static final double ALGAE_REMOVAL_TIME = 3.0; // seconds
   public static final double ALGAE_REMOVAL_SPEED = 1.0;
 }
