@@ -2,9 +2,12 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -17,15 +20,15 @@ import java.util.function.IntSupplier;
 public class Coral extends SubsystemBase {
   private CoralGrabber grabber = new CoralGrabber();
   private Elevator elevator = new Elevator();
-  private PIDController movementController =
-      new PIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D);
+  private ProfiledPIDController movementController =
+      new ProfiledPIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D, new TrapezoidProfile.Constraints(1, 2));
   private CoralPivot coralPivot = new CoralPivot();
-  private double[] elevatorScoringHeights = {0.0, 0.906, 1.324, 0.7};
+  private double[] elevatorScoringHeights = {0.0, 0.906, 1.324, 1.310};
   private Rotation2d[] coralScoringRotations = {
     Rotation2d.fromDegrees(60),
-    Rotation2d.fromRadians(6.07),
-    Rotation2d.fromRadians(6.07),
-    Rotation2d.fromDegrees(60.0)
+    Rotation2d.fromRadians(6.02),
+    Rotation2d.fromRadians(6.02),
+    Rotation2d.fromDegrees(70.0)
   };
   private Rotation2d[] reefClearRotationsPrimary = {
     Rotation2d.fromDegrees(-35), Rotation2d.fromDegrees(-35)
@@ -64,15 +67,15 @@ public class Coral extends SubsystemBase {
                 .andThen(grabber.releaseCoral()));
   }
 
-  private boolean shouldCompleteClear = false;
+  private boolean shouldComplete = false;
 
   private Command reefClear(int idx, BooleanSupplier completeClear) {
-    return Commands.runOnce(() -> shouldCompleteClear = false)
+    return Commands.runOnce(() -> shouldComplete = false)
         .andThen(
             coralPivot
                 .setPivotAngle(
                     () -> {
-                      if (shouldCompleteClear) {
+                      if (shouldComplete) {
                         return reefClearRotationsSecondary[idx];
                       } else {
                         return reefClearRotationsPrimary[idx];
@@ -86,8 +89,49 @@ public class Coral extends SubsystemBase {
                         .withDeadline(Commands.waitSeconds(1.4))
                         .andThen(
                             Commands.waitUntil(completeClear),
-                            Commands.runOnce(() -> shouldCompleteClear = true),
-                            grabber.removeAlgae())));
+                            Commands.runOnce(() -> shouldComplete = true),
+                            grabber
+                                .removeAlgae()
+                                .withDeadline(
+                                    Commands.waitUntil(() -> !completeClear.getAsBoolean())
+                                        .andThen(Commands.waitUntil(completeClear))))));
+  }
+
+  public Command l4Score(BooleanSupplier completeScore) {
+    return Commands.runOnce(() -> shouldComplete = false)
+        .andThen(
+            coralPivot
+                .setPivotAngle(
+                    () -> {
+                      if (elevator.isAtPosition()) {
+                        return coralScoringRotations[3];
+                      } else {
+                        return coralScoringRotations[3].minus(Rotation2d.fromDegrees(20));
+                      }
+                    })
+                .alongWith(
+                    elevator.setElevatorHeight(
+                        () -> {
+                          if (shouldComplete) {
+                            return elevatorScoringHeights[3] - .15;
+                          } else {
+                            return elevatorScoringHeights[3];
+                          }
+                        }))
+                .withDeadline(
+                    Commands.waitUntil(elevator::isAtPosition)
+                        .andThen(
+                            Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(0.4))
+                        .withDeadline(Commands.waitSeconds(1.4))
+                        .andThen(Commands.waitUntil(completeScore))
+                        .deadlineFor(grabber.grabCoralRaw())
+                        .andThen(
+                            Commands.runOnce(() -> shouldComplete = true), grabber.releaseCoral())))
+        .andThen(
+            coralPivot
+                .setPivotAngle(() -> coralScoringRotations[3].minus(Rotation2d.fromDegrees(20)))
+                .until(coralPivot::isPivotReady))
+        .andThen(elevator.setElevatorHeight(() -> 0.0).until(elevator::isAtPosition));
   }
 
   public Command l1Score(BooleanSupplier completeScore) {
@@ -102,10 +146,6 @@ public class Coral extends SubsystemBase {
     return score(2, completeScore);
   }
 
-  public Command l4Score(BooleanSupplier completeScore) {
-    return score(3, completeScore);
-  }
-
   public Command l1ReefClear(BooleanSupplier completeClear) {
     return reefClear(0, completeClear);
   }
@@ -114,23 +154,31 @@ public class Coral extends SubsystemBase {
     return reefClear(1, completeClear);
   }
 
+  @Logged
+  public Rotation2d positionAngle;
+
   public Command goToReef(Drivetrain drivetrain, IntSupplier idx) {
     return drivetrain
         .orbit(
             Positions::getReef,
-            () ->
-                movementController.calculate(
-                    drivetrain
-                        .getPose()
+            () -> {
+                positionAngle = Positions.getIndividualReef(idx.getAsInt())
                         .getTranslation()
                         .minus(Positions.getReef().getTranslation())
-                        .getAngle()
-                        .getRadians(),
-                    Positions.getIndividualReef(idx.getAsInt())
-                        .getTranslation()
-                        .minus(Positions.getReef().getTranslation())
-                        .getAngle()
-                        .getRadians()),
+                        .getAngle();
+                return -movementController.calculate(
+                        drivetrain
+                                .getPose()
+                                .getTranslation()
+                                .minus(Positions.getReef().getTranslation())
+                                .getAngle()
+                                .getRadians(),
+                        Positions.getIndividualReef(idx.getAsInt())
+                                .getTranslation()
+                                .minus(Positions.getReef().getTranslation())
+                                .getAngle()
+                                .getRadians());
+            },
             () -> CoralConfig.MOVEMENT_DISTANCE)
         .until(movementController::atSetpoint)
         .andThen(
@@ -175,7 +223,15 @@ public class Coral extends SubsystemBase {
   public Command pickUpCoral() {
     return elevator
         .setElevatorHeight(() -> CoralConfig.INTAKE_HEIGHT)
-        .alongWith(coralPivot.setPivotAngle(() -> CoralConfig.INTAKE_ANGLE))
+        .alongWith(
+            coralPivot.setPivotAngle(
+                () -> {
+                  if (Math.round(Timer.getFPGATimestamp() * 2.0) % 2 == 0) {
+                    return CoralConfig.INTAKE_ANGLE_LOWER;
+                  } else {
+                    return CoralConfig.INTAKE_ANGLE_UPPER;
+                  }
+                }))
         .withDeadline(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.grabCoral()));

@@ -82,7 +82,9 @@ public class Algae extends SubsystemBase {
   }
 
   public Command releaseAlgae() {
-    return wheelsMove(-AlgaeConfig.INTAKE_SPEED).withTimeout(AlgaeConfig.RELEASE_TIME);
+    return wheelsMove(-AlgaeConfig.INTAKE_SPEED)
+        .withTimeout(AlgaeConfig.RELEASE_TIME)
+        .andThen(returnToUp());
   }
 
   public Command returnToUp() {
