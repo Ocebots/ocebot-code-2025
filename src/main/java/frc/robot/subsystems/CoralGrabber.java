@@ -18,18 +18,18 @@ import frc.robot.config.CoralGrabberConfig;
 public class CoralGrabber extends SubsystemBase {
   private SparkMax motor = new SparkMax(CANMappings.END_EFFECTOR_ID, MotorType.kBrushless);
   private LinearFilter filter =
-          LinearFilter.singlePoleIIR(
-                  CoralGrabberConfig.FILTER_TIME_CONSTANT, TimedRobot.kDefaultPeriod);
+      LinearFilter.singlePoleIIR(
+          CoralGrabberConfig.FILTER_TIME_CONSTANT, TimedRobot.kDefaultPeriod);
 
   public CoralGrabber() {
     // Running positive should grab the coral, negative should release it
     motor.configure(
-            new SparkMaxConfig()
-                    .idleMode(CoralGrabberConfig.IDLE_MODE)
-                    .smartCurrentLimit(CoralGrabberConfig.CURRENT_LIMIT)
-                    .inverted(true),
-            ResetMode.kResetSafeParameters,
-            PersistMode.kPersistParameters);
+        new SparkMaxConfig()
+            .idleMode(CoralGrabberConfig.IDLE_MODE)
+            .smartCurrentLimit(CoralGrabberConfig.CURRENT_LIMIT)
+            .inverted(true),
+        ResetMode.kResetSafeParameters,
+        PersistMode.kPersistParameters);
   }
 
   public double filteredCurrent() {
@@ -38,28 +38,28 @@ public class CoralGrabber extends SubsystemBase {
 
   public Command grabCoralRaw() {
     return Commands.runEnd(
-            () -> motor.set(CoralGrabberConfig.GRAB_SPEED), () -> motor.stopMotor(), this);
+        () -> motor.set(CoralGrabberConfig.GRAB_SPEED), () -> motor.stopMotor(), this);
   }
 
   public Command grabCoral() {
     return Commands.runOnce(() -> filter.reset())
-            .andThen(
-                    grabCoralRaw()
-                            .until(
-                                    () ->
-                                            filter.calculate(motor.getOutputCurrent())
-                                                    > CoralGrabberConfig.TRIGGER_CURRENT));
+        .andThen(
+            grabCoralRaw()
+                .until(
+                    () ->
+                        filter.calculate(motor.getOutputCurrent())
+                            > CoralGrabberConfig.TRIGGER_CURRENT));
   }
 
   public Command releaseCoral() {
     return Commands.runEnd(
-                    () -> motor.set(-CoralGrabberConfig.RELEASE_SPEED), () -> motor.stopMotor(), this)
-            .withTimeout(CoralGrabberConfig.RELEASE_TIME);
+            () -> motor.set(-CoralGrabberConfig.RELEASE_SPEED), () -> motor.stopMotor(), this)
+        .withTimeout(CoralGrabberConfig.RELEASE_TIME);
   }
 
   public Command removeAlgae() {
     return Commands.runEnd(
-            () -> motor.set(-CoralGrabberConfig.ALGAE_REMOVAL_SPEED), () -> motor.stopMotor(), this);
+        () -> motor.set(-CoralGrabberConfig.ALGAE_REMOVAL_SPEED), () -> motor.stopMotor(), this);
   }
 
   public void run() {

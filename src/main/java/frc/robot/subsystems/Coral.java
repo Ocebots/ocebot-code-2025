@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -21,7 +20,11 @@ public class Coral extends SubsystemBase {
   private CoralGrabber grabber = new CoralGrabber();
   private Elevator elevator = new Elevator();
   private ProfiledPIDController movementController =
-      new ProfiledPIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D, new TrapezoidProfile.Constraints(1, 2));
+      new ProfiledPIDController(
+          CoralConfig.MOVEMENT_P,
+          CoralConfig.MOVEMENT_I,
+          CoralConfig.MOVEMENT_D,
+          new TrapezoidProfile.Constraints(1, 2));
   private CoralPivot coralPivot = new CoralPivot();
   private double[] elevatorScoringHeights = {0.0, 0.906, 1.324, 1.310};
   private Rotation2d[] coralScoringRotations = {
@@ -154,30 +157,30 @@ public class Coral extends SubsystemBase {
     return reefClear(1, completeClear);
   }
 
-  @Logged
-  public Rotation2d positionAngle;
+  @Logged public Rotation2d positionAngle;
 
   public Command goToReef(Drivetrain drivetrain, IntSupplier idx) {
     return drivetrain
         .orbit(
             Positions::getReef,
             () -> {
-                positionAngle = Positions.getIndividualReef(idx.getAsInt())
-                        .getTranslation()
-                        .minus(Positions.getReef().getTranslation())
-                        .getAngle();
-                return -movementController.calculate(
-                        drivetrain
-                                .getPose()
-                                .getTranslation()
-                                .minus(Positions.getReef().getTranslation())
-                                .getAngle()
-                                .getRadians(),
-                        Positions.getIndividualReef(idx.getAsInt())
-                                .getTranslation()
-                                .minus(Positions.getReef().getTranslation())
-                                .getAngle()
-                                .getRadians());
+              positionAngle =
+                  Positions.getIndividualReef(idx.getAsInt())
+                      .getTranslation()
+                      .minus(Positions.getReef().getTranslation())
+                      .getAngle();
+              return -movementController.calculate(
+                  drivetrain
+                      .getPose()
+                      .getTranslation()
+                      .minus(Positions.getReef().getTranslation())
+                      .getAngle()
+                      .getRadians(),
+                  Positions.getIndividualReef(idx.getAsInt())
+                      .getTranslation()
+                      .minus(Positions.getReef().getTranslation())
+                      .getAngle()
+                      .getRadians());
             },
             () -> CoralConfig.MOVEMENT_DISTANCE)
         .until(movementController::atSetpoint)

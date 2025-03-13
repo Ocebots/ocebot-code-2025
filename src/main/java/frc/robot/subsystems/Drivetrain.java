@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 import com.studica.frc.AHRS;
-import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -19,7 +18,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -30,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.*;
-
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -41,49 +38,49 @@ import org.photonvision.targeting.PhotonPipelineResult;
 public class Drivetrain extends SubsystemBase {
   // Create MAXSwerveModules
   private final SwerveModule frontLeft =
-          new SwerveModule(
-                  CANMappings.FRONT_LEFT_DRIVING,
-                  CANMappings.FRONT_LEFT_TURNING,
-                  DrivetrainConfig.FRONT_LEFT_CHASSIS_ANGULAR_OFFSET);
+      new SwerveModule(
+          CANMappings.FRONT_LEFT_DRIVING,
+          CANMappings.FRONT_LEFT_TURNING,
+          DrivetrainConfig.FRONT_LEFT_CHASSIS_ANGULAR_OFFSET);
 
   private final SwerveModule frontRight =
-          new SwerveModule(
-                  CANMappings.FRONT_RIGHT_DRIVING,
-                  CANMappings.FRONT_RIGHT_TURNING,
-                  DrivetrainConfig.FRONT_RIGHT_CHASSIS_ANGULAR_OFFSET);
+      new SwerveModule(
+          CANMappings.FRONT_RIGHT_DRIVING,
+          CANMappings.FRONT_RIGHT_TURNING,
+          DrivetrainConfig.FRONT_RIGHT_CHASSIS_ANGULAR_OFFSET);
 
   private final SwerveModule rearLeft =
-          new SwerveModule(
-                  CANMappings.REAR_LEFT_DRIVING,
-                  CANMappings.REAR_LEFT_TURNING,
-                  DrivetrainConfig.BACK_LEFT_CHASSIS_ANGULAR_OFFSET);
+      new SwerveModule(
+          CANMappings.REAR_LEFT_DRIVING,
+          CANMappings.REAR_LEFT_TURNING,
+          DrivetrainConfig.BACK_LEFT_CHASSIS_ANGULAR_OFFSET);
 
   private final SwerveModule rearRight =
-          new SwerveModule(
-                  CANMappings.REAR_RIGHT_DRIVING,
-                  CANMappings.REAR_RIGHT_TURNING,
-                  DrivetrainConfig.BACK_RIGHT_CHASSIS_ANGULAR_OFFSET);
+      new SwerveModule(
+          CANMappings.REAR_RIGHT_DRIVING,
+          CANMappings.REAR_RIGHT_TURNING,
+          DrivetrainConfig.BACK_RIGHT_CHASSIS_ANGULAR_OFFSET);
 
   public final ProfiledPIDController orbitDistanceController =
-          new ProfiledPIDController(
-                  OrbitConfig.ORBIT_DISTANCE_P,
-                  OrbitConfig.ORBIT_DISTANCE_I,
-                  OrbitConfig.ORBIT_DISTANCE_D,
-                  new TrapezoidProfile.Constraints(
-                          OrbitConfig.ORBIT_DISTANCE_MAX_VELOCITY, OrbitConfig.ORBIT_DISTANCE_MAX_ACCELERATION),
-                  TimedRobot.kDefaultPeriod);
+      new ProfiledPIDController(
+          OrbitConfig.ORBIT_DISTANCE_P,
+          OrbitConfig.ORBIT_DISTANCE_I,
+          OrbitConfig.ORBIT_DISTANCE_D,
+          new TrapezoidProfile.Constraints(
+              OrbitConfig.ORBIT_DISTANCE_MAX_VELOCITY, OrbitConfig.ORBIT_DISTANCE_MAX_ACCELERATION),
+          TimedRobot.kDefaultPeriod);
   public final ProfiledPIDController orbitRotationController =
-          new ProfiledPIDController(
-                  OrbitConfig.ORBIT_ROTATION_P,
-                  OrbitConfig.ORBIT_ROTATION_I,
-                  OrbitConfig.ORBIT_ROTATION_D,
-                  new TrapezoidProfile.Constraints(
-                          OrbitConfig.ORBIT_ROTATION_MAX_VELOCITY, OrbitConfig.ORBIT_ROTATION_MAX_ACCELERATION),
-                  TimedRobot.kDefaultPeriod);
+      new ProfiledPIDController(
+          OrbitConfig.ORBIT_ROTATION_P,
+          OrbitConfig.ORBIT_ROTATION_I,
+          OrbitConfig.ORBIT_ROTATION_D,
+          new TrapezoidProfile.Constraints(
+              OrbitConfig.ORBIT_ROTATION_MAX_VELOCITY, OrbitConfig.ORBIT_ROTATION_MAX_ACCELERATION),
+          TimedRobot.kDefaultPeriod);
 
   private PhotonPoseEstimator vision =
-          new PhotonPoseEstimator(
-                  VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.CAMERA_POSITION);
+      new PhotonPoseEstimator(
+          VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.CAMERA_POSITION);
 
   Ultrasonic rangeFinder = new Ultrasonic(1, 2);
 
@@ -98,61 +95,61 @@ public class Drivetrain extends SubsystemBase {
 
   @NotLogged
   private SlewRateLimiter rotLimiter =
-          new SlewRateLimiter(DrivetrainConfig.MAX_ROTATIONAL_ACCELERATION);
+      new SlewRateLimiter(DrivetrainConfig.MAX_ROTATIONAL_ACCELERATION);
 
   @Logged private ChassisSpeeds desiredChassisSpeeds = new ChassisSpeeds();
 
   @NotLogged
   private SwerveDrivePoseEstimator poseEstimator =
-          new SwerveDrivePoseEstimator(
-                  DrivetrainConfig.DRIVE_KINEMATICS,
-                  getHeading(),
-                  new SwerveModulePosition[] {
-                          this.frontLeft.getPosition(),
-                          this.frontRight.getPosition(),
-                          this.rearLeft.getPosition(),
-                          this.rearRight.getPosition()
-                  },
-                  new Pose2d(0, 0, getHeading()));
+      new SwerveDrivePoseEstimator(
+          DrivetrainConfig.DRIVE_KINEMATICS,
+          getHeading(),
+          new SwerveModulePosition[] {
+            this.frontLeft.getPosition(),
+            this.frontRight.getPosition(),
+            this.rearLeft.getPosition(),
+            this.rearRight.getPosition()
+          },
+          new Pose2d(0, 0, getHeading()));
 
   public Drivetrain() {
     SmartDashboard.putData(field);
     orbitRotationController.enableContinuousInput(-Math.PI, Math.PI);
     orbitDistanceController.setTolerance(
-            DrivetrainConfig.DISTANCE_POSITION_TOLERANCE, DrivetrainConfig.DISTANCE_VELOCITY_TOLERANCE);
+        DrivetrainConfig.DISTANCE_POSITION_TOLERANCE, DrivetrainConfig.DISTANCE_VELOCITY_TOLERANCE);
     orbitRotationController.setTolerance(
-            DrivetrainConfig.ROTATION_POSITION_TOLERANCE, DrivetrainConfig.ROTATION_VELOCITY_TOLERANCE);
+        DrivetrainConfig.ROTATION_POSITION_TOLERANCE, DrivetrainConfig.ROTATION_VELOCITY_TOLERANCE);
   }
 
   @Logged(name = "desiredStates")
   public SwerveModuleState[] getDesiredStates() {
     return new SwerveModuleState[] {
-            this.frontLeft.getDesiredState(),
-            this.frontRight.getDesiredState(),
-            this.rearLeft.getDesiredState(),
-            this.rearRight.getDesiredState()
+      this.frontLeft.getDesiredState(),
+      this.frontRight.getDesiredState(),
+      this.rearLeft.getDesiredState(),
+      this.rearRight.getDesiredState()
     };
   }
 
   @Logged(name = "actualStates")
   public SwerveModuleState[] getActualStates() {
     return new SwerveModuleState[] {
-            this.frontLeft.getState(),
-            this.frontRight.getState(),
-            this.rearLeft.getState(),
-            this.rearRight.getState()
+      this.frontLeft.getState(),
+      this.frontRight.getState(),
+      this.rearLeft.getState(),
+      this.rearRight.getState()
     };
   }
 
   @Logged(name = "actualChassisSpeeds")
   public ChassisSpeeds getChassisSpeeds() {
     return DrivetrainConfig.DRIVE_KINEMATICS.toChassisSpeeds(
-            new SwerveModuleState[] {
-                    this.frontLeft.getState(),
-                    this.frontRight.getState(),
-                    this.rearLeft.getState(),
-                    this.rearRight.getState()
-            });
+        new SwerveModuleState[] {
+          this.frontLeft.getState(),
+          this.frontRight.getState(),
+          this.rearLeft.getState(),
+          this.rearRight.getState()
+        });
   }
 
   public void setChassisSpeeds(ChassisSpeeds speeds) {
@@ -160,7 +157,7 @@ public class Drivetrain extends SubsystemBase {
     var swerveModuleStates = DrivetrainConfig.DRIVE_KINEMATICS.toSwerveModuleStates(speeds);
 
     SwerveDriveKinematics.desaturateWheelSpeeds(
-            swerveModuleStates, DrivetrainConfig.MAX_SPEED_METERS_PER_SECOND);
+        swerveModuleStates, DrivetrainConfig.MAX_SPEED_METERS_PER_SECOND);
 
     this.frontLeft.setDesiredState(swerveModuleStates[0]);
     this.frontRight.setDesiredState(swerveModuleStates[1]);
@@ -178,14 +175,14 @@ public class Drivetrain extends SubsystemBase {
     // Update the odometry in the periodic block
 
     field.setRobotPose(
-            this.poseEstimator.update(
-                    getHeading(),
-                    new SwerveModulePosition[] {
-                            this.frontLeft.getPosition(),
-                            this.frontRight.getPosition(),
-                            this.rearLeft.getPosition(),
-                            this.rearRight.getPosition()
-                    }));
+        this.poseEstimator.update(
+            getHeading(),
+            new SwerveModulePosition[] {
+              this.frontLeft.getPosition(),
+              this.frontRight.getPosition(),
+              this.rearLeft.getPosition(),
+              this.rearRight.getPosition()
+            }));
 
     vision.setReferencePose(this.poseEstimator.getEstimatedPosition());
 
@@ -193,14 +190,12 @@ public class Drivetrain extends SubsystemBase {
 
     if (!results.isEmpty()) {
       vision
-              .update(
-                      results.get(results.size() - 1))
-              .ifPresent(
-                      (pose) ->
-                              this.poseEstimator.addVisionMeasurement(
-                                      pose.estimatedPose.toPose2d(), pose.timestampSeconds));
+          .update(results.get(results.size() - 1))
+          .ifPresent(
+              (pose) ->
+                  this.poseEstimator.addVisionMeasurement(
+                      pose.estimatedPose.toPose2d(), pose.timestampSeconds));
     }
-
   }
 
   /**
@@ -214,50 +209,53 @@ public class Drivetrain extends SubsystemBase {
   }
 
   public Command followLine(
-          DoubleSupplier distance, DoubleSupplier speed, Supplier<Rotation2d> rotation) {
+      DoubleSupplier distance, DoubleSupplier speed, Supplier<Rotation2d> rotation) {
     return Commands.runEnd(
-            () -> {
-              ChassisSpeeds chassisSpeeds =
-                      ChassisSpeeds.fromRobotRelativeSpeeds(
-                              -orbitDistanceController.calculate(getDistance(), distance.getAsDouble()),
-                              speed.getAsDouble(),
-                              orbitRotationController.calculate(
-                                      getHeading().getRadians(), rotation.get().getRadians()),
-                              rotation.get());
+        () -> {
+          ChassisSpeeds chassisSpeeds =
+              ChassisSpeeds.fromRobotRelativeSpeeds(
+                  -orbitDistanceController.calculate(getDistance(), distance.getAsDouble()),
+                  speed.getAsDouble(),
+                  orbitRotationController.calculate(
+                      getHeading().getRadians(), rotation.get().getRadians()),
+                  rotation.get());
 
-              setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
-            },
-            () -> drive(0, 0, 0, false, false),
-            this);
+          setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
+        },
+        () -> drive(0, 0, 0, false, false),
+        this);
   }
 
-  @Logged
-  public Rotation2d targetAngle;
-  @Logged
-  public double lastDistance;
+  @Logged public Rotation2d targetAngle;
+  @Logged public double lastDistance;
 
   public Command orbit(Supplier<Pose2d> center, DoubleSupplier speed, DoubleSupplier distance) {
     return Commands.runEnd(
-            () -> {
-              Transform2d relativeTransform = getPose().minus(center.get());
-              targetAngle =
-                      center.get().getTranslation().minus(getPose().getTranslation()).getAngle().minus(Rotation2d.fromDegrees(180));
-              lastDistance = relativeTransform.getTranslation().getNorm();
-              ChassisSpeeds chassisSpeeds =
-                      ChassisSpeeds.fromRobotRelativeSpeeds(
-                              -orbitDistanceController.calculate(
-                                      relativeTransform.getTranslation().getNorm(), distance.getAsDouble()),
-                              speed.getAsDouble(),
-                              orbitRotationController.calculate(
-                                      getHeading().getRadians(),
-                                      new TrapezoidProfile.State(
-                                              targetAngle.getRadians(), speed.getAsDouble() / distance.getAsDouble())),
-                              targetAngle);
+        () -> {
+          Transform2d relativeTransform = getPose().minus(center.get());
+          targetAngle =
+              center
+                  .get()
+                  .getTranslation()
+                  .minus(getPose().getTranslation())
+                  .getAngle()
+                  .minus(Rotation2d.fromDegrees(180));
+          lastDistance = relativeTransform.getTranslation().getNorm();
+          ChassisSpeeds chassisSpeeds =
+              ChassisSpeeds.fromRobotRelativeSpeeds(
+                  -orbitDistanceController.calculate(
+                      relativeTransform.getTranslation().getNorm(), distance.getAsDouble()),
+                  speed.getAsDouble(),
+                  orbitRotationController.calculate(
+                      getHeading().getRadians(),
+                      new TrapezoidProfile.State(
+                          targetAngle.getRadians(), speed.getAsDouble() / distance.getAsDouble())),
+                  targetAngle);
 
-              setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
-            },
-            () -> drive(0, 0, 0, false, false),
-            this);
+          setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
+        },
+        () -> drive(0, 0, 0, false, false),
+        this);
   }
 
   /**
@@ -271,7 +269,7 @@ public class Drivetrain extends SubsystemBase {
    * @param rateLimit Whether to enable rate limiting for smoother control.
    */
   public void drive(
-          double xSpeed, double ySpeed, double rot, boolean fieldRelative, boolean rateLimit) {
+      double xSpeed, double ySpeed, double rot, boolean fieldRelative, boolean rateLimit) {
     double xSpeedCommanded;
     double ySpeedCommanded;
     double rotationCommanded;
@@ -280,10 +278,10 @@ public class Drivetrain extends SubsystemBase {
       // Convert XY to polar(theta and magnitude) for rate limiting
       double inputTranslationDir = Math.atan2(ySpeed, xSpeed);
       double inputTranslationMag =
-              Math.min(
-                      Math.sqrt(Math.pow(xSpeed, 2) + Math.pow(ySpeed, 2))
-                              * DrivetrainConfig.MAX_SPEED_METERS_PER_SECOND,
-                      DrivetrainConfig.MAX_SPEED_METERS_PER_SECOND);
+          Math.min(
+              Math.sqrt(Math.pow(xSpeed, 2) + Math.pow(ySpeed, 2))
+                  * DrivetrainConfig.MAX_SPEED_METERS_PER_SECOND,
+              DrivetrainConfig.MAX_SPEED_METERS_PER_SECOND);
 
       inputTranslationMag = magLimiter.calculate(inputTranslationMag);
 
@@ -297,18 +295,18 @@ public class Drivetrain extends SubsystemBase {
     }
 
     this.setChassisSpeeds(
-            fieldRelative
-                    ? ChassisSpeeds.fromFieldRelativeSpeeds(
-                    xSpeedCommanded,
-                    ySpeedCommanded,
-                    rotationCommanded,
-                    getPose()
-                            .getRotation()
-                            .plus(
-                                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
-                                            ? Rotation2d.fromDegrees(0)
-                                            : Rotation2d.fromDegrees(180)))
-                    : new ChassisSpeeds(xSpeedCommanded, ySpeedCommanded, rotationCommanded));
+        fieldRelative
+            ? ChassisSpeeds.fromFieldRelativeSpeeds(
+                xSpeedCommanded,
+                ySpeedCommanded,
+                rotationCommanded,
+                getPose()
+                    .getRotation()
+                    .plus(
+                        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
+                            ? Rotation2d.fromDegrees(0)
+                            : Rotation2d.fromDegrees(180)))
+            : new ChassisSpeeds(xSpeedCommanded, ySpeedCommanded, rotationCommanded));
   }
 
   /** Sets the wheels into an X formation to prevent movement. */

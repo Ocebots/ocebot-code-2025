@@ -27,16 +27,16 @@ public class RobotContainer {
   private Drivetrain drivetrain = new Drivetrain();
   private int lastButtonPressed;
   private Command pickup =
-          coral
-                  .pickUpCoral()
-                  .andThen(
-                          Commands.runOnce(
-                                  () -> {
-                                    speedMultiplier = 0.5;
-                                    fieldRelative = true;
-                                  }));
+      coral
+          .pickUpCoral()
+          .andThen(
+              Commands.runOnce(
+                  () -> {
+                    speedMultiplier = 0.5;
+                    fieldRelative = true;
+                  }));
   private Command pickupSource =
-          coral.pickUpCoralSource().andThen(Commands.runOnce(() -> speedMultiplier = 0.5));
+      coral.pickUpCoralSource().andThen(Commands.runOnce(() -> speedMultiplier = 0.5));
   private double speedMultiplier = 0.5;
   private boolean fieldRelative = true;
 
@@ -47,54 +47,55 @@ public class RobotContainer {
 
   private void configureBindings() {
     CommandScheduler.getInstance()
-            .schedule(
-                    Commands.run(
-                            () -> {
-                              for (int i = 0; i < 12; i++) {
-                                if (totalController.getHID().getRawButtonPressed(i + 1)) {
-                                  lastButtonPressed = i;
-                                }
-                              }
-                            }).ignoringDisable(true));
+        .schedule(
+            Commands.run(
+                    () -> {
+                      for (int i = 0; i < 12; i++) {
+                        if (totalController.getHID().getRawButtonPressed(i + 1)) {
+                          lastButtonPressed = i;
+                        }
+                      }
+                    })
+                .ignoringDisable(true));
     controller
-            .a()
-            .onTrue(
-                    Commands.runOnce(
-                            () -> {
-                              if (pickup.isScheduled()) {
-                                pickupSource.cancel();
-                                pickup.cancel();
-                                speedMultiplier = 0.5;
-                                fieldRelative = true;
-                              } else {
-                                pickup.schedule();
-                                speedMultiplier = 0.2;
-                                fieldRelative = false;
-                              }
-                            }));
+        .a()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (pickup.isScheduled()) {
+                    pickupSource.cancel();
+                    pickup.cancel();
+                    speedMultiplier = 0.5;
+                    fieldRelative = true;
+                  } else {
+                    pickup.schedule();
+                    speedMultiplier = 0.2;
+                    fieldRelative = false;
+                  }
+                }));
     controller
-            .b()
-            .onTrue(
-                    Commands.runOnce(
-                            () -> {
-                              if (pickupSource.isScheduled()) {
-                                pickupSource.cancel();
-                                pickup.cancel();
-                                speedMultiplier = 0.5;
-                                fieldRelative = true;
-                              } else {
-                                pickupSource.schedule();
-                                speedMultiplier = 0.2;
-                              }
-                            }));
+        .b()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (pickupSource.isScheduled()) {
+                    pickupSource.cancel();
+                    pickup.cancel();
+                    speedMultiplier = 0.5;
+                    fieldRelative = true;
+                  } else {
+                    pickupSource.schedule();
+                    speedMultiplier = 0.2;
+                  }
+                }));
 
     controller
-            .rightTrigger()
-            .onTrue(
-                    algae
-                            .pickUpAlgae()
-                            .until(() -> !controller.rightTrigger().getAsBoolean())
-                            .andThen(algae.storeAlgae()));
+        .rightTrigger()
+        .onTrue(
+            algae
+                .pickUpAlgae()
+                .until(() -> !controller.rightTrigger().getAsBoolean())
+                .andThen(algae.storeAlgae()));
 
     controller.y().onTrue(algae.releaseAlgae().andThen(algae.returnToUp()));
     controller.x().whileTrue(coral.goToReef(drivetrain, () -> lastButtonPressed));
@@ -108,17 +109,18 @@ public class RobotContainer {
     totalController.button(13).onTrue(coral.l2ReefClear(controller.leftTrigger()));
 
     drivetrain.setDefaultCommand(
-            Commands.run(
-                    () ->
-                            drivetrain.drive(
-                                    applyDeadband(-controller.getLeftY() * speedMultiplier),
-                                    applyDeadband(-controller.getLeftX() * speedMultiplier),
-                                    applyDeadband(-controller.getRightX() * speedMultiplier),
-                                    fieldRelative,
-                                    true),
-                    drivetrain));
+        Commands.run(
+            () ->
+                drivetrain.drive(
+                    applyDeadband(-controller.getLeftY() * speedMultiplier),
+                    applyDeadband(-controller.getLeftX() * speedMultiplier),
+                    applyDeadband(-controller.getRightX() * speedMultiplier),
+                    fieldRelative,
+                    true),
+            drivetrain));
 
-//    drivetrain.setDefaultCommand(drivetrain.orbit(Positions::getReef, () -> applyDeadband(controller.getLeftY()), () -> 1.25));
+    //    drivetrain.setDefaultCommand(drivetrain.orbit(Positions::getReef, () ->
+    // applyDeadband(controller.getLeftY()), () -> 1.25));
 
     controller.povUp().whileTrue(climb.pivotClimb());
     controller.povDown().whileTrue(climb.pivotRelease());
@@ -131,6 +133,7 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return Commands.print("No autonomous command configured");
   }
+
   public Pose2d reef() {
     return Positions.getIndividualReef(lastButtonPressed);
   }
