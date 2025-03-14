@@ -28,12 +28,12 @@ public class RobotContainer {
           .andThen(
               Commands.runOnce(
                   () -> {
-                    speedMultiplier = 0.5;
+                    speedMultiplier = 1.0;
                     fieldRelative = true;
                   }));
   private Command pickupSource =
-      coral.pickUpCoralSource().andThen(Commands.runOnce(() -> speedMultiplier = 0.5));
-  private double speedMultiplier = 0.5;
+      coral.pickUpCoralSource().andThen(Commands.runOnce(() -> speedMultiplier = 1.0));
+  private double speedMultiplier = 1.0;
   private boolean fieldRelative = true;
 
   public RobotContainer() {
@@ -50,7 +50,7 @@ public class RobotContainer {
                   if (pickup.isScheduled()) {
                     pickupSource.cancel();
                     pickup.cancel();
-                    speedMultiplier = 0.5;
+                    speedMultiplier = 1.0;
                     fieldRelative = true;
                   } else {
                     pickup.schedule();
@@ -66,7 +66,7 @@ public class RobotContainer {
                   if (pickupSource.isScheduled()) {
                     pickupSource.cancel();
                     pickup.cancel();
-                    speedMultiplier = 0.5;
+                    speedMultiplier = 1.0;
                     fieldRelative = true;
                   } else {
                     pickupSource.schedule();

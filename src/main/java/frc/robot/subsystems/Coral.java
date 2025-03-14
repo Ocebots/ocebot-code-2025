@@ -24,7 +24,7 @@ public class Coral extends SubsystemBase {
   private Rotation2d[] coralScoringRotations = {
     Rotation2d.fromDegrees(60),
     Rotation2d.fromRadians(6.07),
-    Rotation2d.fromRadians(6.07),
+    Rotation2d.fromRadians(6.0),
     Rotation2d.fromDegrees(60.0)
   };
   private Rotation2d[] reefClearRotationsPrimary = {
