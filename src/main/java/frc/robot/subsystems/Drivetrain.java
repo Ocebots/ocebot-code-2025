@@ -7,7 +7,7 @@ package frc.robot.subsystems;
 import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
-import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -17,10 +17,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -61,22 +59,15 @@ public class Drivetrain extends SubsystemBase {
           CANMappings.REAR_RIGHT_TURNING,
           DrivetrainConfig.BACK_RIGHT_CHASSIS_ANGULAR_OFFSET);
 
-  public final ProfiledPIDController orbitDistanceController =
-      new ProfiledPIDController(
-          OrbitConfig.ORBIT_DISTANCE_P,
-          OrbitConfig.ORBIT_DISTANCE_I,
-          OrbitConfig.ORBIT_DISTANCE_D,
-          new TrapezoidProfile.Constraints(
-              OrbitConfig.ORBIT_DISTANCE_MAX_VELOCITY, OrbitConfig.ORBIT_DISTANCE_MAX_ACCELERATION),
-          TimedRobot.kDefaultPeriod);
-  public final ProfiledPIDController orbitRotationController =
-      new ProfiledPIDController(
-          OrbitConfig.ORBIT_ROTATION_P,
-          OrbitConfig.ORBIT_ROTATION_I,
-          OrbitConfig.ORBIT_ROTATION_D,
-          new TrapezoidProfile.Constraints(
-              OrbitConfig.ORBIT_ROTATION_MAX_VELOCITY, OrbitConfig.ORBIT_ROTATION_MAX_ACCELERATION),
-          TimedRobot.kDefaultPeriod);
+  public final PIDController xController =
+      new PIDController(
+          OrbitConfig.ORBIT_DISTANCE_P, OrbitConfig.ORBIT_DISTANCE_I, OrbitConfig.ORBIT_DISTANCE_D);
+  public final PIDController yController =
+      new PIDController(
+          OrbitConfig.ORBIT_DISTANCE_P, OrbitConfig.ORBIT_DISTANCE_I, OrbitConfig.ORBIT_DISTANCE_D);
+  public final PIDController rotController =
+      new PIDController(
+          OrbitConfig.ORBIT_ROTATION_P, OrbitConfig.ORBIT_ROTATION_I, OrbitConfig.ORBIT_ROTATION_D);
 
   private PhotonPoseEstimator vision =
       new PhotonPoseEstimator(
@@ -114,10 +105,12 @@ public class Drivetrain extends SubsystemBase {
 
   public Drivetrain() {
     SmartDashboard.putData(field);
-    orbitRotationController.enableContinuousInput(-Math.PI, Math.PI);
-    orbitDistanceController.setTolerance(
+    rotController.enableContinuousInput(-Math.PI, Math.PI);
+    xController.setTolerance(
         DrivetrainConfig.DISTANCE_POSITION_TOLERANCE, DrivetrainConfig.DISTANCE_VELOCITY_TOLERANCE);
-    orbitRotationController.setTolerance(
+    yController.setTolerance(
+        DrivetrainConfig.DISTANCE_POSITION_TOLERANCE, DrivetrainConfig.DISTANCE_VELOCITY_TOLERANCE);
+    rotController.setTolerance(
         DrivetrainConfig.ROTATION_POSITION_TOLERANCE, DrivetrainConfig.ROTATION_VELOCITY_TOLERANCE);
   }
 
@@ -214,13 +207,14 @@ public class Drivetrain extends SubsystemBase {
         () -> {
           ChassisSpeeds chassisSpeeds =
               ChassisSpeeds.fromRobotRelativeSpeeds(
-                  -orbitDistanceController.calculate(getDistance(), distance.getAsDouble()),
+                  -xController.calculate(getDistance(), distance.getAsDouble()),
                   speed.getAsDouble(),
-                  orbitRotationController.calculate(
-                      getHeading().getRadians(), rotation.get().getRadians()),
+                  rotController.calculate(
+                      getPose().getRotation().getRadians(), rotation.get().getRadians()),
                   rotation.get());
 
-          setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
+          setChassisSpeeds(
+              ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getPose().getRotation()));
         },
         () -> drive(0, 0, 0, false, false),
         this);
@@ -233,26 +227,19 @@ public class Drivetrain extends SubsystemBase {
     return Commands.runEnd(
         () -> {
           Transform2d relativeTransform = getPose().minus(center.get());
-          targetAngle =
-              center
-                  .get()
-                  .getTranslation()
-                  .minus(getPose().getTranslation())
-                  .getAngle()
-                  .minus(Rotation2d.fromDegrees(180));
+          targetAngle = center.get().getTranslation().minus(getPose().getTranslation()).getAngle();
           lastDistance = relativeTransform.getTranslation().getNorm();
           ChassisSpeeds chassisSpeeds =
               ChassisSpeeds.fromRobotRelativeSpeeds(
-                  -orbitDistanceController.calculate(
+                  -xController.calculate(
                       relativeTransform.getTranslation().getNorm(), distance.getAsDouble()),
                   speed.getAsDouble(),
-                  orbitRotationController.calculate(
-                      getHeading().getRadians(),
-                      new TrapezoidProfile.State(
-                          targetAngle.getRadians(), speed.getAsDouble() / distance.getAsDouble())),
+                  rotController.calculate(
+                      getPose().getRotation().getRadians(), targetAngle.getRadians()),
                   targetAngle);
 
-          setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
+          setChassisSpeeds(
+              ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getPose().getRotation()));
         },
         () -> drive(0, 0, 0, false, false),
         this);
@@ -322,14 +309,8 @@ public class Drivetrain extends SubsystemBase {
    *
    * @return the robot's heading in degrees, from -180 to 180
    */
-  @Logged
-  public Rotation2d getHeading() {
-    double angle = this.gyro.getAngle() * (DrivetrainConfig.GYRO_IS_REVERSED ? -1.0 : 1.0);
-
-    if (angle > 180.0 || angle < -180.0) {
-      angle -= Math.round(angle / 360.0) * 360.0;
-    }
-
-    return Rotation2d.fromDegrees(angle);
+  private Rotation2d getHeading() {
+    return Rotation2d.fromDegrees(
+        this.gyro.getAngle() * (DrivetrainConfig.GYRO_IS_REVERSED ? -1.0 : 1.0));
   }
 }

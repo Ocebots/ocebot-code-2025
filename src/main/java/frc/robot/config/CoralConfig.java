@@ -3,7 +3,7 @@ package frc.robot.config;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 public class CoralConfig {
-  public static final double MOVEMENT_P = 1.5;
+  public static final double MOVEMENT_P = 6.0;
   public static final double MOVEMENT_I = 0.0;
   public static final double MOVEMENT_D = 0.0;
 
@@ -17,5 +17,5 @@ public class CoralConfig {
   public static final double INTAKE_HEIGHT_SOURCE = 0.545;
   public static final Rotation2d INTAKE_ANGLE_SOURCE = Rotation2d.fromRadians(.502);
 
-  public static final double MOVEMENT_DISTANCE = 1.25;
+  public static final double MOVEMENT_DISTANCE = 1.75;
 }

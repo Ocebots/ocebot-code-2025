@@ -98,12 +98,19 @@ public class RobotContainer {
                 .andThen(algae.storeAlgae()));
 
     controller.y().onTrue(algae.releaseAlgae().andThen(algae.returnToUp()));
-    controller.x().whileTrue(coral.goToReef(drivetrain, () -> lastButtonPressed));
 
-    totalController.button(15).onTrue(coral.l4Score(controller.leftTrigger()));
-    totalController.button(16).onTrue(coral.l3Score(controller.leftTrigger()));
-    totalController.button(17).onTrue(coral.l2Score(controller.leftTrigger()));
-    totalController.button(18).onTrue(coral.l1Score(controller.leftTrigger()));
+    totalController
+        .button(15)
+        .whileTrue(coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 3));
+    totalController
+        .button(16)
+        .whileTrue(coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 2));
+    totalController
+        .button(17)
+        .whileTrue(coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 1));
+    totalController
+        .button(18)
+        .whileTrue(coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 0));
 
     totalController.button(14).onTrue(coral.l1ReefClear(controller.leftTrigger()));
     totalController.button(13).onTrue(coral.l2ReefClear(controller.leftTrigger()));
@@ -119,8 +126,9 @@ public class RobotContainer {
                     true),
             drivetrain));
 
-    //    drivetrain.setDefaultCommand(drivetrain.orbit(Positions::getReef, () ->
-    // applyDeadband(controller.getLeftY()), () -> 1.25));
+    // drivetrain.setDefaultCommand(
+    //     drivetrain.orbit(
+    //         Positions::getReef, () -> applyDeadband(controller.getLeftY()), () -> 1.25));
 
     controller.povUp().whileTrue(climb.pivotClimb());
     controller.povDown().whileTrue(climb.pivotRelease());

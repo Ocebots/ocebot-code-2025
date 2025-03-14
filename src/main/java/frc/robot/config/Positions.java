@@ -18,11 +18,14 @@ public class Positions {
   }
 
   public static Pose2d getIndividualReef(int idx) {
+    idx = 13 - idx;
+    idx %= 12;
+
     return getReef()
         .transformBy(
             new Transform2d(
                 new Translation2d(
-                        0.801751 + Units.inchesToMeters(0 / 2 + 2),
+                        0.801751 + Units.inchesToMeters(25),
                         Units.inchesToMeters(12.94) / 2.0 * (idx % 2 * 2 - 1))
                     .rotateBy(
                         Rotation2d.fromDegrees(
@@ -31,6 +34,11 @@ public class Positions {
                                         == Alliance.Blue
                                     ? 0.0
                                     : 180.0))),
-                new Rotation2d()));
+                Rotation2d.fromDegrees(
+                        60.0 * (double) (idx / 2)
+                            + (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
+                                ? 0.0
+                                : 180.0))
+                    .plus(Rotation2d.k180deg)));
   }
 }
