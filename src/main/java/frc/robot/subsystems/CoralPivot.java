@@ -33,7 +33,7 @@ public class CoralPivot extends SubsystemBase {
       new SparkMax(CANMappings.CORAL_PIVOT_ID, SparkLowLevel.MotorType.kBrushless);
   private AbsoluteEncoder pivotEncoder = pivot.getAbsoluteEncoder();
   private Rotation2d lastAngle = new Rotation2d();
-  private PIDController controller = new PIDController(3.0, 0.0, 0.0);
+  private PIDController controller = new PIDController(3.8, 0.0, 0.0);
   private ArmFeedforward ff = new ArmFeedforward(0.0, 0.0, 0.0, 0.0);
 
   private SysIdRoutine routine =

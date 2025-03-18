@@ -59,8 +59,7 @@ public class CoralGrabber extends SubsystemBase {
 
   public Command removeAlgae() {
     return Commands.runEnd(
-            () -> motor.set(-CoralGrabberConfig.ALGAE_REMOVAL_SPEED), () -> motor.stopMotor(), this)
-        .withTimeout(CoralGrabberConfig.ALGAE_REMOVAL_TIME);
+        () -> motor.set(-CoralGrabberConfig.ALGAE_REMOVAL_SPEED), () -> motor.stopMotor(), this);
   }
 
   public void run() {

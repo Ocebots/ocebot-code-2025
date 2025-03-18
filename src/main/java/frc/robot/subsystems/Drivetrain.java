@@ -4,10 +4,12 @@
 
 package frc.robot.subsystems;
 
+import choreo.trajectory.SwerveSample;
 import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
-import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -17,10 +19,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,9 +28,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.*;
+import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.targeting.PhotonPipelineResult;
 
 @Logged
 public class Drivetrain extends SubsystemBase {
@@ -59,22 +61,15 @@ public class Drivetrain extends SubsystemBase {
           CANMappings.REAR_RIGHT_TURNING,
           DrivetrainConfig.BACK_RIGHT_CHASSIS_ANGULAR_OFFSET);
 
-  public final ProfiledPIDController orbitDistanceController =
-      new ProfiledPIDController(
-          OrbitConfig.ORBIT_DISTANCE_P,
-          OrbitConfig.ORBIT_DISTANCE_I,
-          OrbitConfig.ORBIT_DISTANCE_D,
-          new TrapezoidProfile.Constraints(
-              OrbitConfig.ORBIT_DISTANCE_MAX_VELOCITY, OrbitConfig.ORBIT_DISTANCE_MAX_ACCELERATION),
-          TimedRobot.kDefaultPeriod);
-  public final ProfiledPIDController orbitRotationController =
-      new ProfiledPIDController(
-          OrbitConfig.ORBIT_ROTATION_P,
-          OrbitConfig.ORBIT_ROTATION_I,
-          OrbitConfig.ORBIT_ROTATION_D,
-          new TrapezoidProfile.Constraints(
-              OrbitConfig.ORBIT_ROTATION_MAX_VELOCITY, OrbitConfig.ORBIT_ROTATION_MAX_ACCELERATION),
-          TimedRobot.kDefaultPeriod);
+  public final PIDController xController =
+      new PIDController(
+          OrbitConfig.ORBIT_DISTANCE_P, OrbitConfig.ORBIT_DISTANCE_I, OrbitConfig.ORBIT_DISTANCE_D);
+  public final PIDController yController =
+      new PIDController(
+          OrbitConfig.ORBIT_DISTANCE_P, OrbitConfig.ORBIT_DISTANCE_I, OrbitConfig.ORBIT_DISTANCE_D);
+  public final PIDController rotController =
+      new PIDController(
+          OrbitConfig.ORBIT_ROTATION_P, OrbitConfig.ORBIT_ROTATION_I, OrbitConfig.ORBIT_ROTATION_D);
 
   private PhotonPoseEstimator vision =
       new PhotonPoseEstimator(
@@ -112,10 +107,12 @@ public class Drivetrain extends SubsystemBase {
 
   public Drivetrain() {
     SmartDashboard.putData(field);
-    orbitRotationController.enableContinuousInput(-Math.PI, Math.PI);
-    orbitDistanceController.setTolerance(
+    rotController.enableContinuousInput(-Math.PI, Math.PI);
+    xController.setTolerance(
         DrivetrainConfig.DISTANCE_POSITION_TOLERANCE, DrivetrainConfig.DISTANCE_VELOCITY_TOLERANCE);
-    orbitRotationController.setTolerance(
+    yController.setTolerance(
+        DrivetrainConfig.DISTANCE_POSITION_TOLERANCE, DrivetrainConfig.DISTANCE_VELOCITY_TOLERANCE);
+    rotController.setTolerance(
         DrivetrainConfig.ROTATION_POSITION_TOLERANCE, DrivetrainConfig.ROTATION_VELOCITY_TOLERANCE);
   }
 
@@ -184,18 +181,27 @@ public class Drivetrain extends SubsystemBase {
 
     vision.setReferencePose(this.poseEstimator.getEstimatedPosition());
 
-    // FIXME: This results in -1
-    // if (!Vision.camera.getAllUnreadResults().isEmpty()) {
-    //   vision
-    //       .update(
-    //           Vision.camera
-    //               .getAllUnreadResults()
-    //               .get(Vision.camera.getAllUnreadResults().size() - 1))
-    //       .ifPresent(
-    //           (pose) ->
-    //               this.poseEstimator.addVisionMeasurement(
-    //                   pose.estimatedPose.toPose2d(), pose.timestampSeconds));
-    // }
+    List<PhotonPipelineResult> results = Vision.camera.getAllUnreadResults();
+
+    if (!results.isEmpty()) {
+      PhotonPipelineResult result = results.get(results.size() - 1);
+      vision
+          .update(result)
+          .ifPresent(
+              (pose) -> {
+                if (result.multitagResult.isEmpty()) {
+                  this.poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.9));
+                } else {
+                  double stdDev =
+                      .5 * result.targets.get(0).bestCameraToTarget.getTranslation().getNorm() + .5;
+                  this.poseEstimator.setVisionMeasurementStdDevs(
+                      VecBuilder.fill(stdDev, stdDev, stdDev));
+                }
+
+                this.poseEstimator.addVisionMeasurement(
+                    pose.estimatedPose.toPose2d(), pose.timestampSeconds);
+              });
+    }
   }
 
   /**
@@ -214,36 +220,39 @@ public class Drivetrain extends SubsystemBase {
         () -> {
           ChassisSpeeds chassisSpeeds =
               ChassisSpeeds.fromRobotRelativeSpeeds(
-                  -orbitDistanceController.calculate(getDistance(), distance.getAsDouble()),
+                  -xController.calculate(getDistance(), distance.getAsDouble()),
                   speed.getAsDouble(),
-                  orbitRotationController.calculate(
-                      getHeading().getRadians(), rotation.get().getRadians()),
+                  rotController.calculate(
+                      getPose().getRotation().getRadians(), rotation.get().getRadians()),
                   rotation.get());
 
-          setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
+          setChassisSpeeds(
+              ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getPose().getRotation()));
         },
         () -> drive(0, 0, 0, false, false),
         this);
   }
 
+  @Logged public Rotation2d targetAngle;
+  @Logged public double lastDistance;
+
   public Command orbit(Supplier<Pose2d> center, DoubleSupplier speed, DoubleSupplier distance) {
     return Commands.runEnd(
         () -> {
           Transform2d relativeTransform = getPose().minus(center.get());
-          Rotation2d targetAngle =
-              center.get().getTranslation().minus(getPose().getTranslation()).getAngle();
+          targetAngle = center.get().getTranslation().minus(getPose().getTranslation()).getAngle();
+          lastDistance = relativeTransform.getTranslation().getNorm();
           ChassisSpeeds chassisSpeeds =
               ChassisSpeeds.fromRobotRelativeSpeeds(
-                  -orbitDistanceController.calculate(
+                  -xController.calculate(
                       relativeTransform.getTranslation().getNorm(), distance.getAsDouble()),
                   speed.getAsDouble(),
-                  orbitRotationController.calculate(
-                      getHeading().getRadians(),
-                      new TrapezoidProfile.State(
-                          targetAngle.getRadians(), speed.getAsDouble() / distance.getAsDouble())),
+                  rotController.calculate(
+                      getPose().getRotation().getRadians(), targetAngle.getRadians()),
                   targetAngle);
 
-          setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getHeading()));
+          setChassisSpeeds(
+              ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getPose().getRotation()));
         },
         () -> drive(0, 0, 0, false, false),
         this);
@@ -313,14 +322,25 @@ public class Drivetrain extends SubsystemBase {
    *
    * @return the robot's heading in degrees, from -180 to 180
    */
-  @Logged
-  public Rotation2d getHeading() {
-    double angle = this.gyro.getAngle() * (DrivetrainConfig.GYRO_IS_REVERSED ? -1.0 : 1.0);
+  private Rotation2d getHeading() {
+    return Rotation2d.fromDegrees(
+        this.gyro.getAngle() * (DrivetrainConfig.GYRO_IS_REVERSED ? -1.0 : 1.0));
+  }
 
-    if (angle > 180.0 || angle < -180.0) {
-      angle -= Math.round(angle / 360.0) * 360.0;
-    }
+  public void followTrajectory(SwerveSample sample) {
+    System.out.println("Follow trajectory");
+    // Get the current pose of the robot
+    Pose2d pose = getPose();
 
-    return Rotation2d.fromDegrees(angle);
+    // Generate the next speeds for the robot
+    ChassisSpeeds speeds =
+        new ChassisSpeeds(
+            sample.vx + xController.calculate(pose.getX(), sample.x),
+            sample.vy + yController.calculate(pose.getY(), sample.y),
+            sample.omega
+                + rotController.calculate(pose.getRotation().getRadians(), sample.heading));
+
+    // Apply the generated speeds
+    setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, pose.getRotation()));
   }
 }

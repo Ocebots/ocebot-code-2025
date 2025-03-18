@@ -75,6 +75,10 @@ public class Algae extends SubsystemBase {
     return armAngChange(AlgaeConfig.PICKUP_ANGLE).alongWith(wheelsMove(AlgaeConfig.INTAKE_SPEED));
   }
 
+  public Command deployForClimb() {
+    return armAngChange(Rotation2d.fromRadians(-1.55)).withDeadline(waitUntilArmReady());
+  }
+
   public Command storeAlgae() {
     return armAngChange(AlgaeConfig.STORE_ANGLE)
         .alongWith(wheelsMove(AlgaeConfig.INTAKE_SPEED))
@@ -82,7 +86,9 @@ public class Algae extends SubsystemBase {
   }
 
   public Command releaseAlgae() {
-    return wheelsMove(-AlgaeConfig.INTAKE_SPEED).withTimeout(AlgaeConfig.RELEASE_TIME);
+    return wheelsMove(-AlgaeConfig.INTAKE_SPEED)
+        .withTimeout(AlgaeConfig.RELEASE_TIME)
+        .andThen(returnToUp());
   }
 
   public Command returnToUp() {

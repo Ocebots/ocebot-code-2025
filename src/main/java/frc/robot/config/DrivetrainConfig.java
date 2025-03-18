@@ -10,13 +10,13 @@ public class DrivetrainConfig {
   public static final double MAX_SPEED_METERS_PER_SECOND = 4.8;
   public static final double MAX_ANGULAR_SPEED = 2 * Math.PI; // radians per second
 
-  public static final double DISTANCE_POSITION_TOLERANCE = 0.0;
-  public static final double DISTANCE_VELOCITY_TOLERANCE = 0.0;
-  public static final double ROTATION_POSITION_TOLERANCE = 0.0;
-  public static final double ROTATION_VELOCITY_TOLERANCE = 0.0;
+  public static final double DISTANCE_POSITION_TOLERANCE = 0.05;
+  public static final double DISTANCE_VELOCITY_TOLERANCE = 0.05;
+  public static final double ROTATION_POSITION_TOLERANCE = 0.0872665;
+  public static final double ROTATION_VELOCITY_TOLERANCE = 0.0872665;
 
-  public static final double MAX_ACCELERATION = 10; // meters per second per second
-  public static final double MAX_DRIVE_ANGULAR_VELOCITY = 10; // radians per second
+  public static final double MAX_ACCELERATION = 6; // meters per second per second
+  public static final double MAX_DRIVE_ANGULAR_VELOCITY = 6; // radians per second
   public static final double MAX_ROTATIONAL_ACCELERATION = 2; // percent per second
 
   // Chassis configuration
