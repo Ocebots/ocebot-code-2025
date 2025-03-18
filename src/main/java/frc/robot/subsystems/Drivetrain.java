@@ -8,7 +8,6 @@ import choreo.trajectory.SwerveSample;
 import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -189,15 +188,10 @@ public class Drivetrain extends SubsystemBase {
           .update(result)
           .ifPresent(
               (pose) -> {
-                if (result.multitagResult.isEmpty()) {
-                  this.poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.9));
-                } else {
-                  double stdDev =
-                      .5 * result.targets.get(0).bestCameraToTarget.getTranslation().getNorm() + .5;
-                  this.poseEstimator.setVisionMeasurementStdDevs(
-                      VecBuilder.fill(stdDev, stdDev, stdDev));
+                if (result.multitagResult.isEmpty()
+                    && result.targets.get(0).bestCameraToTarget.getTranslation().getNorm() > 2) {
+                  return;
                 }
-
                 this.poseEstimator.addVisionMeasurement(
                     pose.estimatedPose.toPose2d(), pose.timestampSeconds);
               });
