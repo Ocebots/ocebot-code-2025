@@ -4,10 +4,14 @@
 
 package frc.robot;
 
+import choreo.auto.AutoChooser;
+import choreo.auto.AutoFactory;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -25,6 +29,9 @@ public class RobotContainer {
   private CommandXboxController controller = new CommandXboxController(0);
   private CommandGenericHID totalController = new CommandGenericHID(1);
   private Drivetrain drivetrain = new Drivetrain();
+  private AutoFactory autos =
+      new AutoFactory(
+          drivetrain::getPose, (_pose) -> {}, drivetrain::followTrajectory, true, drivetrain);
   private int lastButtonPressed;
   private Command pickup =
       coral
@@ -32,17 +39,31 @@ public class RobotContainer {
           .andThen(
               Commands.runOnce(
                   () -> {
-                    speedMultiplier = 0.5;
+                    speedMultiplier = 1.0;
                     fieldRelative = true;
                   }));
   private Command pickupSource =
-      coral.pickUpCoralSource().andThen(Commands.runOnce(() -> speedMultiplier = 0.5));
-  private double speedMultiplier = 0.5;
+      coral.pickUpCoralSource().andThen(Commands.runOnce(() -> speedMultiplier = 1.0));
+  private Command safeState = coral.safeState();
+  private double speedMultiplier = 1.0;
   private boolean fieldRelative = true;
+  private AutoChooser autoChooser = new AutoChooser();
+  @Logged public boolean autoDisabled = false;
 
   public RobotContainer() {
     DataLogManager.start();
     configureBindings();
+    autoChooser.addCmd(
+        "Left",
+        () ->
+            Commands.sequence(
+                Commands.waitSeconds(2), coral.goToReef(drivetrain, () -> 11, () -> 1)));
+    autoChooser.addCmd(
+        "Right",
+        () ->
+            Commands.sequence(
+                Commands.waitSeconds(2), coral.goToReef(drivetrain, () -> 3, () -> 1)));
+    SmartDashboard.putData("Auto Chooser", autoChooser);
   }
 
   private void configureBindings() {
@@ -65,11 +86,11 @@ public class RobotContainer {
                   if (pickup.isScheduled()) {
                     pickupSource.cancel();
                     pickup.cancel();
-                    speedMultiplier = 0.5;
+                    speedMultiplier = 1.0;
                     fieldRelative = true;
                   } else {
                     pickup.schedule();
-                    speedMultiplier = 0.2;
+                    speedMultiplier = 0.3;
                     fieldRelative = false;
                   }
                 }));
@@ -81,11 +102,22 @@ public class RobotContainer {
                   if (pickupSource.isScheduled()) {
                     pickupSource.cancel();
                     pickup.cancel();
-                    speedMultiplier = 0.5;
+                    speedMultiplier = 1.0;
                     fieldRelative = true;
                   } else {
                     pickupSource.schedule();
-                    speedMultiplier = 0.2;
+                    speedMultiplier = 0.4;
+                  }
+                }));
+    controller
+        .x()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (safeState.isScheduled()) {
+                    safeState.cancel();
+                  } else {
+                    safeState.schedule();
                   }
                 }));
 
@@ -101,16 +133,56 @@ public class RobotContainer {
 
     totalController
         .button(15)
-        .whileTrue(coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 3));
+        .whileTrue(
+            Commands.deferredProxy(
+                () -> {
+                  if (autoDisabled) {
+                    return Commands.startEnd(
+                            () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
+                        .withDeadline(coral.l4Score(controller.leftTrigger()));
+                  } else {
+                    return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 3);
+                  }
+                }));
     totalController
         .button(16)
-        .whileTrue(coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 2));
+        .whileTrue(
+            Commands.deferredProxy(
+                () -> {
+                  if (autoDisabled) {
+                    return Commands.startEnd(
+                            () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
+                        .withDeadline(coral.l3Score(controller.leftTrigger()));
+                  } else {
+                    return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 2);
+                  }
+                }));
     totalController
         .button(17)
-        .whileTrue(coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 1));
+        .whileTrue(
+            Commands.deferredProxy(
+                () -> {
+                  if (autoDisabled) {
+                    return Commands.startEnd(
+                            () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
+                        .withDeadline(coral.l2Score(controller.leftTrigger()));
+                  } else {
+                    return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 1);
+                  }
+                }));
     totalController
         .button(18)
-        .whileTrue(coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 0));
+        .whileTrue(
+            Commands.deferredProxy(
+                () -> {
+                  if (autoDisabled) {
+                    return Commands.startEnd(
+                            () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
+                        .withDeadline(coral.l1Score(controller.leftTrigger()));
+                  } else {
+                    return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 0);
+                  }
+                }));
 
     totalController.button(14).onTrue(coral.l1ReefClear(controller.leftTrigger()));
     totalController.button(13).onTrue(coral.l2ReefClear(controller.leftTrigger()));
@@ -126,12 +198,15 @@ public class RobotContainer {
                     true),
             drivetrain));
 
-    // drivetrain.setDefaultCommand(
-    //     drivetrain.orbit(
-    //         Positions::getReef, () -> applyDeadband(controller.getLeftY()), () -> 1.25));
-
     controller.povUp().whileTrue(climb.pivotClimb());
-    controller.povDown().whileTrue(climb.pivotRelease());
+    controller
+        .povDown()
+        .whileTrue(
+            climb
+                .pivotRelease()
+                .alongWith(algae.deployForClimb().unless(() -> DriverStation.getMatchTime() > 25)));
+    controller.povLeft().onTrue(Commands.runOnce(() -> autoDisabled = true));
+    controller.povRight().onTrue(Commands.runOnce(() -> autoDisabled = true));
   }
 
   private double applyDeadband(double value) {
@@ -139,7 +214,7 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
+    return autoChooser.selectedCommand();
   }
 
   public Pose2d reef() {

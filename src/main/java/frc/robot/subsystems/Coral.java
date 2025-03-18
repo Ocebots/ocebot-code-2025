@@ -241,4 +241,10 @@ public class Coral extends SubsystemBase {
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.grabCoral()));
   }
+
+  public Command safeState() {
+    return elevator
+        .setElevatorHeight(() -> CoralConfig.INTAKE_HEIGHT_SOURCE)
+        .alongWith(coralPivot.setPivotAngle(() -> Rotation2d.fromDegrees(75)));
+  }
 }

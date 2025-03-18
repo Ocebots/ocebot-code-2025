@@ -4,9 +4,11 @@
 
 package frc.robot.subsystems;
 
+import choreo.trajectory.SwerveSample;
 import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -182,12 +184,23 @@ public class Drivetrain extends SubsystemBase {
     List<PhotonPipelineResult> results = Vision.camera.getAllUnreadResults();
 
     if (!results.isEmpty()) {
+      PhotonPipelineResult result = results.get(results.size() - 1);
       vision
-          .update(results.get(results.size() - 1))
+          .update(result)
           .ifPresent(
-              (pose) ->
-                  this.poseEstimator.addVisionMeasurement(
-                      pose.estimatedPose.toPose2d(), pose.timestampSeconds));
+              (pose) -> {
+                if (result.multitagResult.isEmpty()) {
+                  this.poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.9));
+                } else {
+                  double stdDev =
+                      .5 * result.targets.get(0).bestCameraToTarget.getTranslation().getNorm() + .5;
+                  this.poseEstimator.setVisionMeasurementStdDevs(
+                      VecBuilder.fill(stdDev, stdDev, stdDev));
+                }
+
+                this.poseEstimator.addVisionMeasurement(
+                    pose.estimatedPose.toPose2d(), pose.timestampSeconds);
+              });
     }
   }
 
@@ -312,5 +325,22 @@ public class Drivetrain extends SubsystemBase {
   private Rotation2d getHeading() {
     return Rotation2d.fromDegrees(
         this.gyro.getAngle() * (DrivetrainConfig.GYRO_IS_REVERSED ? -1.0 : 1.0));
+  }
+
+  public void followTrajectory(SwerveSample sample) {
+    System.out.println("Follow trajectory");
+    // Get the current pose of the robot
+    Pose2d pose = getPose();
+
+    // Generate the next speeds for the robot
+    ChassisSpeeds speeds =
+        new ChassisSpeeds(
+            sample.vx + xController.calculate(pose.getX(), sample.x),
+            sample.vy + yController.calculate(pose.getY(), sample.y),
+            sample.omega
+                + rotController.calculate(pose.getRotation().getRadians(), sample.heading));
+
+    // Apply the generated speeds
+    setChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, pose.getRotation()));
   }
 }

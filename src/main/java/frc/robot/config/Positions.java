@@ -25,7 +25,7 @@ public class Positions {
         .transformBy(
             new Transform2d(
                 new Translation2d(
-                        0.801751 + Units.inchesToMeters(25),
+                        0.801751 + Units.inchesToMeters(22.5),
                         Units.inchesToMeters(12.94) / 2.0 * (idx % 2 * 2 - 1))
                     .rotateBy(
                         Rotation2d.fromDegrees(
