@@ -59,6 +59,10 @@ public class Elevator extends SubsystemBase {
         ElevatorConfig.POSITION_TOLERANCE, ElevatorConfig.VELOCITY_TOLERANCE);
   }
 
+  public double getPosition() {
+    return elevatorEncoder.getPosition();
+  }
+
   public Command setElevatorHeight(DoubleSupplier height) {
     return Commands.runEnd(
         () -> {

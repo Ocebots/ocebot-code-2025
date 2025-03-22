@@ -18,6 +18,10 @@ public class Positions {
   }
 
   public static Pose2d getIndividualReef(int idx) {
+    return getIndividualReef(idx, 0);
+  }
+
+  public static Pose2d getIndividualReef(int idx, double offset) {
     idx = 13 - idx;
     idx %= 12;
 
@@ -25,7 +29,7 @@ public class Positions {
         .transformBy(
             new Transform2d(
                 new Translation2d(
-                        0.801751 + Units.inchesToMeters(22.5),
+                        0.801751 + Units.inchesToMeters(23.0) + offset,
                         Units.inchesToMeters(12.94) / 2.0 * (idx % 2 * 2 - 1))
                     .rotateBy(
                         Rotation2d.fromDegrees(

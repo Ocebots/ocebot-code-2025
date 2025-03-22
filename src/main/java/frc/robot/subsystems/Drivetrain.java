@@ -74,6 +74,10 @@ public class Drivetrain extends SubsystemBase {
       new PhotonPoseEstimator(
           VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.CAMERA_POSITION);
 
+  private PhotonPoseEstimator driverVision =
+      new PhotonPoseEstimator(
+          VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.DRIVER_CAMERA_POSITION);
+
   Ultrasonic rangeFinder = new Ultrasonic(1, 2);
 
   // The gyro sensor
@@ -92,7 +96,7 @@ public class Drivetrain extends SubsystemBase {
   @Logged private ChassisSpeeds desiredChassisSpeeds = new ChassisSpeeds();
 
   @NotLogged
-  private SwerveDrivePoseEstimator poseEstimator =
+  public SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(
           DrivetrainConfig.DRIVE_KINEMATICS,
           getHeading(),
@@ -179,6 +183,7 @@ public class Drivetrain extends SubsystemBase {
             }));
 
     vision.setReferencePose(this.poseEstimator.getEstimatedPosition());
+    driverVision.setReferencePose(this.poseEstimator.getEstimatedPosition());
 
     List<PhotonPipelineResult> results = Vision.camera.getAllUnreadResults();
 
@@ -189,7 +194,24 @@ public class Drivetrain extends SubsystemBase {
           .ifPresent(
               (pose) -> {
                 if (result.multitagResult.isEmpty()
-                    && result.targets.get(0).bestCameraToTarget.getTranslation().getNorm() > 2) {
+                    && result.targets.get(0).bestCameraToTarget.getTranslation().getNorm() > 4) {
+                  return;
+                }
+                this.poseEstimator.addVisionMeasurement(
+                    pose.estimatedPose.toPose2d(), pose.timestampSeconds);
+              });
+    }
+
+    results = Vision.secondCamera.getAllUnreadResults();
+
+    if (!results.isEmpty()) {
+      PhotonPipelineResult result = results.get(results.size() - 1);
+      driverVision
+          .update(result)
+          .ifPresent(
+              (pose) -> {
+                if (result.multitagResult.isEmpty()
+                    && result.targets.get(0).bestCameraToTarget.getTranslation().getNorm() > 4) {
                   return;
                 }
                 this.poseEstimator.addVisionMeasurement(

@@ -1,16 +1,16 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.CoralConfig;
 import frc.robot.config.Positions;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 
@@ -18,19 +18,15 @@ import java.util.function.IntSupplier;
 public class Coral extends SubsystemBase {
   private CoralGrabber grabber = new CoralGrabber();
   private Elevator elevator = new Elevator();
-  private ProfiledPIDController movementController =
-      new ProfiledPIDController(
-          CoralConfig.MOVEMENT_P,
-          CoralConfig.MOVEMENT_I,
-          CoralConfig.MOVEMENT_D,
-          new TrapezoidProfile.Constraints(1, 10));
+  private PIDController movementController =
+      new PIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D);
   private CoralPivot coralPivot = new CoralPivot();
-  private double[] elevatorScoringHeights = {0.0, 0.906, 1.324, 1.310};
+  private double[] elevatorScoringHeights = {0.0, 0.900, 1.29, 1.360};
   private Rotation2d[] coralScoringRotations = {
     Rotation2d.fromDegrees(60),
+    Rotation2d.fromRadians(5.97),
     Rotation2d.fromRadians(6.02),
-    Rotation2d.fromRadians(6.02),
-    Rotation2d.fromDegrees(70.0)
+    Rotation2d.fromDegrees(64.0)
   };
   private Rotation2d[] reefClearRotationsPrimary = {
     Rotation2d.fromDegrees(-35), Rotation2d.fromDegrees(-35)
@@ -65,7 +61,6 @@ public class Coral extends SubsystemBase {
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(0.8))
                 .withDeadline(Commands.waitSeconds(1.8))
                 .andThen(Commands.waitUntil(completeScore))
-                .deadlineFor(grabber.grabCoralRaw())
                 .andThen(grabber.releaseCoral()));
   }
 
@@ -99,16 +94,16 @@ public class Coral extends SubsystemBase {
                                         .andThen(Commands.waitUntil(completeClear))))));
   }
 
-  public Command l4Score(BooleanSupplier completeScore) {
+  public Command l4Score(BooleanSupplier completeScore, boolean shouldHaveAutoTimeout) {
     return Commands.runOnce(() -> shouldComplete = false)
         .andThen(
             coralPivot
                 .setPivotAngle(
                     () -> {
-                      if (elevator.isAtPosition()) {
+                      if (elevator.getPosition() > 1.0 || shouldComplete) {
                         return coralScoringRotations[3];
                       } else {
-                        return coralScoringRotations[3].minus(Rotation2d.fromDegrees(20));
+                        return coralScoringRotations[3].minus(Rotation2d.fromDegrees(15));
                       }
                     })
                 .alongWith(
@@ -123,15 +118,23 @@ public class Coral extends SubsystemBase {
                 .withDeadline(
                     Commands.waitUntil(elevator::isAtPosition)
                         .andThen(
-                            Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(0.4))
-                        .withDeadline(Commands.waitSeconds(1.4))
-                        .andThen(Commands.waitUntil(completeScore))
-                        .deadlineFor(grabber.grabCoralRaw())
+                            Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(1.0))
+                        .withDeadline(Commands.waitSeconds(2.0))
                         .andThen(
-                            Commands.runOnce(() -> shouldComplete = true), grabber.releaseCoral())))
+                            Commands.waitUntil(completeScore)
+                                .raceWith(
+                                    Commands.defer(
+                                        () ->
+                                            shouldHaveAutoTimeout
+                                                ? Commands.waitSeconds(4)
+                                                : Commands.run(() -> {}),
+                                        Set.of())))
+                        .andThen(
+                            Commands.runOnce(() -> shouldComplete = true),
+                            grabber.releaseCoralL4())))
         .andThen(
             coralPivot
-                .setPivotAngle(() -> coralScoringRotations[3].minus(Rotation2d.fromDegrees(20)))
+                .setPivotAngle(() -> coralScoringRotations[3].minus(Rotation2d.fromDegrees(15)))
                 .until(coralPivot::isPivotReady))
         .andThen(elevator.setElevatorHeight(() -> 0.0).until(elevator::isAtPosition));
   }
@@ -164,7 +167,8 @@ public class Coral extends SubsystemBase {
             Positions::getReef,
             () -> {
               positionAngle =
-                  Positions.getIndividualReef(idx.getAsInt())
+                  Positions.getIndividualReef(
+                          idx.getAsInt(), height.getAsInt() == 3 ? CoralConfig.L4_OFFSET : 0)
                       .getTranslation()
                       .minus(Positions.getReef().getTranslation())
                       .getAngle();
@@ -175,7 +179,8 @@ public class Coral extends SubsystemBase {
                       .minus(Positions.getReef().getTranslation())
                       .getAngle()
                       .getRadians(),
-                  Positions.getIndividualReef(idx.getAsInt())
+                  Positions.getIndividualReef(
+                          idx.getAsInt(), height.getAsInt() == 3 ? CoralConfig.L4_OFFSET : 0)
                       .getTranslation()
                       .minus(Positions.getReef().getTranslation())
                       .getAngle()
@@ -184,36 +189,55 @@ public class Coral extends SubsystemBase {
             () -> CoralConfig.MOVEMENT_DISTANCE)
         .until(
             () ->
-                movementController.atGoal()
+                movementController.atSetpoint()
                     && drivetrain.rotController.atSetpoint()
                     && drivetrain.xController.atSetpoint())
         .andThen(
-            Commands.runEnd(
-                    () -> {
-                      ChassisSpeeds speeds =
-                          ChassisSpeeds.fromFieldRelativeSpeeds(
-                              drivetrain.xController.calculate(
-                                  drivetrain.getPose().getX(),
-                                  Positions.getIndividualReef(idx.getAsInt()).getX()),
-                              drivetrain.yController.calculate(
-                                  drivetrain.getPose().getY(),
-                                  Positions.getIndividualReef(idx.getAsInt()).getY()),
-                              drivetrain.rotController.calculate(
-                                  drivetrain.getPose().getRotation().getRadians(),
-                                  Positions.getIndividualReef(idx.getAsInt())
-                                      .getRotation()
-                                      .getRadians()),
-                              drivetrain.getPose().getRotation());
+            Commands.waitSeconds(1.0)
+                .andThen(
+                    Commands.runEnd(
+                        () -> {
+                          ChassisSpeeds speeds =
+                              ChassisSpeeds.fromFieldRelativeSpeeds(
+                                  drivetrain.xController.calculate(
+                                      drivetrain.getPose().getX(),
+                                      Positions.getIndividualReef(
+                                              idx.getAsInt(),
+                                              height.getAsInt() == 3 ? CoralConfig.L4_OFFSET : 0)
+                                          .getX()),
+                                  drivetrain.yController.calculate(
+                                      drivetrain.getPose().getY(),
+                                      Positions.getIndividualReef(
+                                              idx.getAsInt(),
+                                              height.getAsInt() == 3 ? CoralConfig.L4_OFFSET : 0)
+                                          .getY()),
+                                  drivetrain.rotController.calculate(
+                                      drivetrain.getPose().getRotation().getRadians(),
+                                      Positions.getIndividualReef(
+                                              idx.getAsInt(),
+                                              height.getAsInt() == 3 ? CoralConfig.L4_OFFSET : 0)
+                                          .getRotation()
+                                          .getRadians()),
+                                  drivetrain.getPose().getRotation());
 
-                      drivetrain.setChassisSpeeds(speeds);
-                    },
-                    () -> drivetrain.drive(0, 0, 0, false, false))
+                          drivetrain.setChassisSpeeds(speeds);
+                        },
+                        () -> drivetrain.drive(0, 0, 0, false, false)))
                 .withDeadline(
-                    score(
-                        height.getAsInt(),
+                    Commands.defer(
                         () ->
-                            drivetrain.rotController.atSetpoint()
-                                && drivetrain.xController.atSetpoint())));
+                            height.getAsInt() == 3
+                                ? l4Score(
+                                    () ->
+                                        drivetrain.rotController.atSetpoint()
+                                            && drivetrain.xController.atSetpoint(),
+                                    true)
+                                : score(
+                                    height.getAsInt(),
+                                    () ->
+                                        drivetrain.rotController.atSetpoint()
+                                            && drivetrain.xController.atSetpoint()),
+                        Set.of(elevator, coralPivot, grabber))));
   }
 
   public Command pickUpCoral() {

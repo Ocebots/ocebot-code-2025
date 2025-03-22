@@ -1,7 +1,7 @@
 package frc.robot.config;
 
 public class OrbitConfig {
-  public static final double ORBIT_DISTANCE_P = 1.8;
+  public static final double ORBIT_DISTANCE_P = 2.2;
   public static final double ORBIT_DISTANCE_I = 0.0;
   public static final double ORBIT_DISTANCE_D = 0.0;
   public static final double ORBIT_DISTANCE_MAX_VELOCITY = 1.5;

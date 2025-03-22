@@ -73,7 +73,7 @@ public class CoralPivot extends SubsystemBase {
                 new AbsoluteEncoderConfig()
                     .positionConversionFactor(CoralPivotConfig.ENCODER_POSITION_CONVERSION_FACTOR)
                     .velocityConversionFactor(CoralPivotConfig.ENCODER_VELOCITY_CONVERSION_FACTOR))
-            .apply(new SignalsConfig().absoluteEncoderPositionPeriodMs(5))
+            .apply(new SignalsConfig().absoluteEncoderPositionPeriodMs(3))
             .apply(
                 new ClosedLoopConfig()
                     .pid(

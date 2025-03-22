@@ -8,9 +8,9 @@ import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -31,7 +31,11 @@ public class RobotContainer {
   private Drivetrain drivetrain = new Drivetrain();
   private AutoFactory autos =
       new AutoFactory(
-          drivetrain::getPose, (_pose) -> {}, drivetrain::followTrajectory, true, drivetrain);
+          drivetrain::getPose,
+          (pose) -> drivetrain.poseEstimator.resetPose(pose),
+          drivetrain::followTrajectory,
+          true,
+          drivetrain);
   private int lastButtonPressed;
   private Command pickup =
       coral
@@ -48,11 +52,13 @@ public class RobotContainer {
   private double speedMultiplier = 1.0;
   private boolean fieldRelative = true;
   private AutoChooser autoChooser = new AutoChooser();
-  @Logged public boolean autoDisabled = false;
+  @Logged public boolean autoDisabled = true;
+  private Field2d selectedSpot = new Field2d();
 
   public RobotContainer() {
     DataLogManager.start();
     configureBindings();
+    SmartDashboard.putData("scheduler", CommandScheduler.getInstance());
     autoChooser.addCmd(
         "Left",
         () ->
@@ -63,7 +69,8 @@ public class RobotContainer {
         () ->
             Commands.sequence(
                 Commands.waitSeconds(2), coral.goToReef(drivetrain, () -> 3, () -> 1)));
-    SmartDashboard.putData("Auto Chooser", autoChooser);
+    // SmartDashboard.putData("Auto Chooser", autoChooser);
+    SmartDashboard.putData("Selected Score Locationn", selectedSpot);
   }
 
   private void configureBindings() {
@@ -139,7 +146,7 @@ public class RobotContainer {
                   if (autoDisabled) {
                     return Commands.startEnd(
                             () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
-                        .withDeadline(coral.l4Score(controller.leftTrigger()));
+                        .withDeadline(coral.l4Score(controller.leftTrigger(), false));
                   } else {
                     return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 3);
                   }
@@ -213,11 +220,12 @@ public class RobotContainer {
     return MathUtil.applyDeadband(value, ControllerConfig.DEADBAND);
   }
 
-  public Command getAutonomousCommand() {
-    return autoChooser.selectedCommand();
+  public void periodic() {
+    selectedSpot.setRobotPose(Positions.getIndividualReef(lastButtonPressed));
   }
 
-  public Pose2d reef() {
-    return Positions.getIndividualReef(lastButtonPressed);
+  public Command getAutonomousCommand() {
+    return Commands.sequence(
+        Commands.waitSeconds(2), coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 3));
   }
 }

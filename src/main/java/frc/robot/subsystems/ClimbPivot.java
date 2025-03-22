@@ -26,10 +26,10 @@ public class ClimbPivot extends SubsystemBase {
   }
 
   public Command pivotClimb() {
-    return Commands.runEnd(() -> pivot.set(0.25), () -> pivot.set(0), this);
+    return Commands.runEnd(() -> pivot.set(0.5), () -> pivot.set(0), this);
   }
 
   public Command pivotRelease() {
-    return Commands.runEnd(() -> pivot.set(-0.25), () -> pivot.set(0), this);
+    return Commands.runEnd(() -> pivot.set(-0.5), () -> pivot.set(0), this);
   }
 }

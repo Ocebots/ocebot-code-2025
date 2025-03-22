@@ -36,7 +36,7 @@ public class CoralGrabber extends SubsystemBase {
     return filter.lastValue();
   }
 
-  public Command grabCoralRaw() {
+  private Command grabCoralRaw() {
     return Commands.runEnd(
         () -> motor.set(CoralGrabberConfig.GRAB_SPEED), () -> motor.stopMotor(), this);
   }
@@ -57,16 +57,22 @@ public class CoralGrabber extends SubsystemBase {
         .withTimeout(CoralGrabberConfig.RELEASE_TIME);
   }
 
+  public Command releaseCoralL4() {
+    return Commands.runEnd(
+            () -> motor.set(-CoralGrabberConfig.L4_RELEASE_SPEED), () -> motor.stopMotor(), this)
+        .withTimeout(CoralGrabberConfig.RELEASE_TIME);
+  }
+
   public Command removeAlgae() {
     return Commands.runEnd(
         () -> motor.set(-CoralGrabberConfig.ALGAE_REMOVAL_SPEED), () -> motor.stopMotor(), this);
   }
 
-  public void run() {
-    motor.set(0.75);
-  }
-
   public void stop() {
     motor.stopMotor();
+  }
+
+  public void run() {
+    motor.set(0.05);
   }
 }

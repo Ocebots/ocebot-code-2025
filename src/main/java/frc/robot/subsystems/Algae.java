@@ -92,6 +92,6 @@ public class Algae extends SubsystemBase {
   }
 
   public Command returnToUp() {
-    return armAngChange(Rotation2d.fromRadians(-0.65)).until(armController::atSetpoint);
+    return armAngChange(Rotation2d.fromRadians(0.0)).until(armController::atSetpoint);
   }
 }
