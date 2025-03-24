@@ -73,6 +73,6 @@ public class CoralGrabber extends SubsystemBase {
   }
 
   public void run() {
-    motor.set(0.05);
+    motor.set(0.1);
   }
 }

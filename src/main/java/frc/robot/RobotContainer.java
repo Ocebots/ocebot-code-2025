@@ -125,6 +125,7 @@ public class RobotContainer {
                     safeState.cancel();
                   } else {
                     safeState.schedule();
+                    speedMultiplier = 1.0;
                   }
                 }));
 

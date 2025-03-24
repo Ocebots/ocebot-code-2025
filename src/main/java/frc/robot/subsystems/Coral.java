@@ -38,6 +38,7 @@ public class Coral extends SubsystemBase {
 
   public Coral() {
     movementController.setTolerance(CoralConfig.POSITION_TOLERANCE, CoralConfig.VELOCITY_TOLERANCE);
+    movementController.enableContinuousInput(-Math.PI, Math.PI);
     elevator.setDefaultCommand(elevator.setElevatorHeight(() -> 0.0));
     coralPivot.setDefaultCommand(coralPivot.setPivotAngle(() -> Rotation2d.fromDegrees(75)));
     grabber.setDefaultCommand(
