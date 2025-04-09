@@ -188,11 +188,7 @@ public class Coral extends SubsystemBase {
                       .getRadians());
             },
             () -> CoralConfig.MOVEMENT_DISTANCE)
-        .until(
-            () ->
-                movementController.atSetpoint()
-                    && drivetrain.rotController.atSetpoint()
-                    && drivetrain.xController.atSetpoint())
+        .until(() -> movementController.atSetpoint())
         .andThen(
             Commands.waitSeconds(1.0)
                 .andThen(
