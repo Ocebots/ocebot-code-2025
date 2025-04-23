@@ -15,6 +15,7 @@ public class CoralConfig {
   public static final Rotation2d INTAKE_ANGLE_UPPER = Rotation2d.fromRadians(5.9);
   public static final Rotation2d INTAKE_ANGLE_LOWER = Rotation2d.fromRadians(5.7);
 
+  // all heights are in meters
   public static final double INTAKE_HEIGHT_SOURCE = 0.490;
   public static final Rotation2d INTAKE_ANGLE_SOURCE = Rotation2d.fromRadians(.497);
 

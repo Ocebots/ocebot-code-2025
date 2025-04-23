@@ -21,7 +21,11 @@ public class Coral extends SubsystemBase {
   private PIDController movementController =
       new PIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D);
   private CoralPivot coralPivot = new CoralPivot();
+
+  // heights for levels
   private double[] elevatorScoringHeights = {0.0, 0.900, 1.29, 1.360};
+
+  // rotations for levels
   private Rotation2d[] coralScoringRotations = {
     Rotation2d.fromDegrees(60),
     Rotation2d.fromRadians(5.97),
@@ -53,6 +57,7 @@ public class Coral extends SubsystemBase {
             grabber));
   }
 
+  // scores the current coral on the selected level
   private Command score(int idx, BooleanSupplier completeScore) {
     return Commands.waitSeconds(0.3)
         .andThen(coralPivot.setPivotAngle(() -> coralScoringRotations[idx]))
@@ -67,6 +72,7 @@ public class Coral extends SubsystemBase {
 
   private boolean shouldComplete = false;
 
+  // clears the reef of algae
   private Command reefClear(int idx, BooleanSupplier completeClear) {
     return Commands.runOnce(() -> shouldComplete = false)
         .andThen(
@@ -95,6 +101,7 @@ public class Coral extends SubsystemBase {
                                         .andThen(Commands.waitUntil(completeClear))))));
   }
 
+  // scores on the l4 level (button pressed the most often)
   public Command l4Score(BooleanSupplier completeScore, boolean shouldHaveAutoTimeout) {
     return Commands.runOnce(() -> shouldComplete = false)
         .andThen(
@@ -140,14 +147,17 @@ public class Coral extends SubsystemBase {
         .andThen(elevator.setElevatorHeight(() -> 0.0).until(elevator::isAtPosition));
   }
 
+  // moves the elevator to score l1, kinda works, not really used
   public Command l1Score(BooleanSupplier completeScore) {
     return score(0, completeScore);
   }
 
+  // moves the elevator to l2
   public Command l2Score(BooleanSupplier completeScore) {
     return score(1, completeScore);
   }
 
+  // moves the elevator to l3
   public Command l3Score(BooleanSupplier completeScore) {
     return score(2, completeScore);
   }
@@ -162,6 +172,7 @@ public class Coral extends SubsystemBase {
 
   @Logged public Rotation2d positionAngle;
 
+  // goes to a specific position around the reef
   public Command goToReef(Drivetrain drivetrain, IntSupplier idx, IntSupplier height) {
     return drivetrain
         .orbit(
@@ -237,12 +248,14 @@ public class Coral extends SubsystemBase {
                         Set.of(elevator, coralPivot, grabber))));
   }
 
+  // picks up coral from ground
   public Command pickUpCoral() {
     return elevator
         .setElevatorHeight(() -> CoralConfig.INTAKE_HEIGHT)
         .alongWith(
             coralPivot.setPivotAngle(
                 () -> {
+                  // intake wiggle
                   if (Math.round(Timer.getFPGATimestamp() * 2.0) % 2 == 0) {
                     return CoralConfig.INTAKE_ANGLE_LOWER;
                   } else {
@@ -254,6 +267,7 @@ public class Coral extends SubsystemBase {
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.grabCoral()));
   }
 
+  // picks up coral from source
   public Command pickUpCoralSource() {
     return elevator
         .setElevatorHeight(() -> CoralConfig.INTAKE_HEIGHT_SOURCE)
@@ -263,6 +277,7 @@ public class Coral extends SubsystemBase {
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), grabber.grabCoral()));
   }
 
+  // safe state if we get a coral in the bot
   public Command safeState() {
     return elevator
         .setElevatorHeight(() -> CoralConfig.INTAKE_HEIGHT_SOURCE)
