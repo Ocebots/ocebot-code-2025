@@ -101,15 +101,15 @@ public class Algae extends SubsystemBase {
         .withDeadline(Commands.waitSeconds(1.0).andThen(waitUntilArmReady()));
   }
 
-
-  //Command that moves the algae wheels for the given release time and then returns the arm to the up position
+  // Command that moves the algae wheels for the given release time and then returns the arm to the
+  // up position
   public Command releaseAlgae() {
     return wheelsMove(-AlgaeConfig.INTAKE_SPEED)
         .withTimeout(AlgaeConfig.RELEASE_TIME)
         .andThen(returnToUp());
   }
 
-  //Command that sets the arm to a given angle until it is at the setpoint
+  // Command that sets the arm to a given angle until it is at the setpoint
   public Command returnToUp() {
     return armAngChange(Rotation2d.fromRadians(0.0)).until(armController::atSetpoint);
   }
