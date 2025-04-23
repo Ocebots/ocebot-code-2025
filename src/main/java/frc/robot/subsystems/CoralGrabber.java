@@ -17,28 +17,20 @@ import frc.robot.config.CoralGrabberConfig;
 @Logged
 public class CoralGrabber
     extends SubsystemBase { // CoralGrabber is a wheel that spins to suck in coral
-  private SparkMax motor =
-      new SparkMax(
-          CANMappings.END_EFFECTOR_ID,
-          MotorType
-              .kBrushless); // Creates the SparkMax with its End Effector ID number and brushless
-  // motor type.
+  // Below: Creates the SparkMax with its End Effector ID number and brushless motor type.
+  private SparkMax motor = new SparkMax(CANMappings.END_EFFECTOR_ID, MotorType.kBrushless);
+
+  // Below: Creates a filter for motor input that smooths down unexpected changes in current.
   private LinearFilter filter =
       LinearFilter.singlePoleIIR(
-          CoralGrabberConfig.FILTER_TIME_CONSTANT,
-          TimedRobot
-              .kDefaultPeriod); // Creates a filter for motor input that smooths down unexpected
-
-  // changes in current.
+          CoralGrabberConfig.FILTER_TIME_CONSTANT, TimedRobot.kDefaultPeriod);
 
   public CoralGrabber() { // creating motor and determining settings
     // Running positive should grab the coral, negative should release it
     motor.configure(
         new SparkMaxConfig()
-            .idleMode(
-                CoralGrabberConfig
-                    .IDLE_MODE) // idle mode is brake (stops movement when not in use, doesn't
-            // coast)
+            .idleMode(CoralGrabberConfig.IDLE_MODE)
+            // idle mode is brake (stops movement when not in use, doesn't coast)
             .smartCurrentLimit(
                 CoralGrabberConfig.CURRENT_LIMIT) // Sets current limit to config number
             .inverted(true),
@@ -46,11 +38,13 @@ public class CoralGrabber
         PersistMode.kPersistParameters);
   }
 
+  // Below: Returns the most recent current value from the filter.
   public double filteredCurrent() {
     return filter.lastValue();
-  } // Returns the most recent current value from the filter.
+  }
 
-  private Command grabCoralRaw() { // Grabs coral while ignoring the current limit
+  // Below: Grabs coral while ignoring the current limit
+  private Command grabCoralRaw() {
     return Commands.runEnd(
         () -> motor.set(CoralGrabberConfig.GRAB_SPEED), () -> motor.stopMotor(), this);
   }
@@ -72,16 +66,16 @@ public class CoralGrabber
         .withTimeout(CoralGrabberConfig.RELEASE_TIME);
   }
 
-  public Command
-      releaseCoralL4() { // Spins the wheel away from the robot in order to place the coral on the
-    // reef. This instance uses setting constants particularly for lever 4 on
-    // the reef.
+  public Command releaseCoralL4() {
+    /* Spins the wheel away from the robot in order to place the coral on the
+    reef. This instance uses setting constants particularly for lever 4 on the reef.*/
     return Commands.runEnd(
             () -> motor.set(-CoralGrabberConfig.L4_RELEASE_SPEED), () -> motor.stopMotor(), this)
         .withTimeout(CoralGrabberConfig.RELEASE_TIME);
   }
 
-  public Command removeAlgae() { // Spins the wheel towards the robot in order to remove algae.
+  // Below: Spins the wheel towards the robot in order to remove algae.
+  public Command removeAlgae() {
     return Commands.runEnd(
         () -> motor.set(-CoralGrabberConfig.ALGAE_REMOVAL_SPEED), () -> motor.stopMotor(), this);
   }
