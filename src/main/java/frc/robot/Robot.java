@@ -17,11 +17,13 @@ public class Robot extends TimedRobot {
 
   private final RobotContainer robotContainer;
 
+  // creates a new robot container
   public Robot() {
     robotContainer = new RobotContainer();
     Epilogue.bind(this);
   }
 
+  // starts the command scheduler
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
@@ -37,6 +39,7 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledExit() {}
 
+  // initializes autonomus
   @Override
   public void autonomousInit() {
     autonomousCommand = robotContainer.getAutonomousCommand();
@@ -52,6 +55,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousExit() {}
 
+  // stops autonomous during teleop
   @Override
   public void teleopInit() {
     if (autonomousCommand != null) {
@@ -65,6 +69,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopExit() {}
 
+  // cancels the command scheduler
   @Override
   public void testInit() {
     CommandScheduler.getInstance().cancelAll();
