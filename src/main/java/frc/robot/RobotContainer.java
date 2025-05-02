@@ -37,6 +37,7 @@ public class RobotContainer {
           true,
           drivetrain);
   private int lastButtonPressed;
+  // slows down robot durring pickup
   private Command pickup =
       coral
           .pickUpCoral()
@@ -46,6 +47,7 @@ public class RobotContainer {
                     speedMultiplier = 1.0;
                     fieldRelative = true;
                   }));
+  // changes speed when picking up from source
   private Command pickupSource =
       coral.pickUpCoralSource().andThen(Commands.runOnce(() -> speedMultiplier = 1.0));
   private Command safeState = coral.safeState();
@@ -56,6 +58,7 @@ public class RobotContainer {
   private Field2d selectedSpot = new Field2d();
 
   public RobotContainer() {
+      // how we selected where we were going to score
     DataLogManager.start();
     configureBindings();
     SmartDashboard.putData("scheduler", CommandScheduler.getInstance());
@@ -72,7 +75,7 @@ public class RobotContainer {
     // SmartDashboard.putData("Auto Chooser", autoChooser);
     SmartDashboard.putData("Selected Score Locationn", selectedSpot);
   }
-
+  // all controller bindings
   private void configureBindings() {
     CommandScheduler.getInstance()
         .schedule(
@@ -85,6 +88,7 @@ public class RobotContainer {
                       }
                     })
                 .ignoringDisable(true));
+    // coral pickup
     controller
         .a()
         .onTrue(
@@ -101,6 +105,7 @@ public class RobotContainer {
                     fieldRelative = false;
                   }
                 }));
+    // cancel coral pickup
     controller
         .b()
         .onTrue(
@@ -116,6 +121,7 @@ public class RobotContainer {
                     speedMultiplier = 0.4;
                   }
                 }));
+    // enabling the safe state
     controller
         .x()
         .onTrue(
@@ -129,6 +135,7 @@ public class RobotContainer {
                   }
                 }));
 
+    // picking up algae
     controller
         .rightTrigger()
         .onTrue(
@@ -137,8 +144,10 @@ public class RobotContainer {
                 .until(() -> !controller.rightTrigger().getAsBoolean())
                 .andThen(algae.storeAlgae()));
 
+    // releasing the algae
     controller.y().onTrue(algae.releaseAlgae().andThen(algae.returnToUp()));
 
+    // scoring on all levels
     totalController
         .button(15)
         .whileTrue(
@@ -192,9 +201,11 @@ public class RobotContainer {
                   }
                 }));
 
+    // clearing algae off reef
     totalController.button(14).onTrue(coral.l1ReefClear(controller.leftTrigger()));
     totalController.button(13).onTrue(coral.l2ReefClear(controller.leftTrigger()));
 
+    // driving the robot
     drivetrain.setDefaultCommand(
         Commands.run(
             () ->
@@ -206,6 +217,7 @@ public class RobotContainer {
                     true),
             drivetrain));
 
+    // deploy climber, releases algae too
     controller.povUp().whileTrue(climb.pivotClimb());
     controller
         .povDown()
@@ -217,14 +229,17 @@ public class RobotContainer {
     controller.povRight().onTrue(Commands.runOnce(() -> autoDisabled = true));
   }
 
+  // deadbands for driving
   private double applyDeadband(double value) {
     return MathUtil.applyDeadband(value, ControllerConfig.DEADBAND);
   }
 
+  // sets the pose for auto-align
   public void periodic() {
     selectedSpot.setRobotPose(Positions.getIndividualReef(lastButtonPressed));
   }
 
+  // autonomous command
   public Command getAutonomousCommand() {
     return Commands.sequence(
         Commands.waitSeconds(2), coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 3));
