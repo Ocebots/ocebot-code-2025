@@ -58,7 +58,7 @@ public class RobotContainer {
   private Field2d selectedSpot = new Field2d();
 
   public RobotContainer() {
-      // how we selected where we were going to score
+    // how we selected where we were going to score
     DataLogManager.start();
     configureBindings();
     SmartDashboard.putData("scheduler", CommandScheduler.getInstance());
@@ -75,6 +75,7 @@ public class RobotContainer {
     // SmartDashboard.putData("Auto Chooser", autoChooser);
     SmartDashboard.putData("Selected Score Locationn", selectedSpot);
   }
+
   // all controller bindings
   private void configureBindings() {
     CommandScheduler.getInstance()
