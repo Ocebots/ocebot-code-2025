@@ -37,7 +37,7 @@ public class RobotContainer {
           true,
           drivetrain);
   private int lastButtonPressed;
-  // slows down robot durring pickup
+  // slows down robot during pickup
   private Command pickup =
       coral
           .pickUpCoral()

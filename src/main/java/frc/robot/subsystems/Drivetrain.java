@@ -60,6 +60,7 @@ public class Drivetrain extends SubsystemBase {
           CANMappings.REAR_RIGHT_TURNING,
           DrivetrainConfig.BACK_RIGHT_CHASSIS_ANGULAR_OFFSET);
 
+  // creates PID controllers
   public final PIDController xController =
       new PIDController(
           OrbitConfig.ORBIT_DISTANCE_P, OrbitConfig.ORBIT_DISTANCE_I, OrbitConfig.ORBIT_DISTANCE_D);
@@ -70,31 +71,38 @@ public class Drivetrain extends SubsystemBase {
       new PIDController(
           OrbitConfig.ORBIT_ROTATION_P, OrbitConfig.ORBIT_ROTATION_I, OrbitConfig.ORBIT_ROTATION_D);
 
+  // creates PhotonPoseEstimator that estimates the robot position from one camera
   private PhotonPoseEstimator vision =
       new PhotonPoseEstimator(
           VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.CAMERA_POSITION);
 
-  private PhotonPoseEstimator driverVision =
+  // creates PhotonPoseEstimator that estimates the robot position from another camera
+  private PhotonPoseEstimator elevatorBodyVision =
       new PhotonPoseEstimator(
           VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.DRIVER_CAMERA_POSITION);
 
+  // creates Ultrasonic rangeFinder that measures distance (currently not in use)
   Ultrasonic rangeFinder = new Ultrasonic(1, 2);
 
   // The gyro sensor
   @NotLogged private final AHRS gyro = new AHRS(AHRS.NavXComType.kMXP_SPI);
 
+  // creates new field 2d to be shared with smart dashboard
   @NotLogged private final Field2d field = new Field2d();
 
-  // Slew rate filter variables for controlling lateral acceleration
+  // slew rate filter variables for controlling lateral acceleration
   @NotLogged
   private SlewRateLimiter magLimiter = new SlewRateLimiter(DrivetrainConfig.MAX_ACCELERATION);
 
+  // slew rate filter variables for controlling rotation acceleration
   @NotLogged
   private SlewRateLimiter rotLimiter =
       new SlewRateLimiter(DrivetrainConfig.MAX_ROTATIONAL_ACCELERATION);
 
+  // creates new robot chassisspeeds
   @Logged private ChassisSpeeds desiredChassisSpeeds = new ChassisSpeeds();
 
+  // creates new swervedriveposeestimator
   @NotLogged
   public SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(
@@ -109,8 +117,11 @@ public class Drivetrain extends SubsystemBase {
           new Pose2d(0, 0, getHeading()));
 
   public Drivetrain() {
+    // sends field data to smart dashboard
     SmartDashboard.putData(field);
+    // makes sure that rotController automatically maps shortest route to setpoint
     rotController.enableContinuousInput(-Math.PI, Math.PI);
+    // sets xController, yController, and rotController position and velocity tolerance
     xController.setTolerance(
         DrivetrainConfig.DISTANCE_POSITION_TOLERANCE, DrivetrainConfig.DISTANCE_VELOCITY_TOLERANCE);
     yController.setTolerance(
@@ -119,6 +130,7 @@ public class Drivetrain extends SubsystemBase {
         DrivetrainConfig.ROTATION_POSITION_TOLERANCE, DrivetrainConfig.ROTATION_VELOCITY_TOLERANCE);
   }
 
+  // logs desired swerve module states
   @Logged(name = "desiredStates")
   public SwerveModuleState[] getDesiredStates() {
     return new SwerveModuleState[] {
@@ -129,6 +141,7 @@ public class Drivetrain extends SubsystemBase {
     };
   }
 
+  // logs actual swerve module states
   @Logged(name = "actualStates")
   public SwerveModuleState[] getActualStates() {
     return new SwerveModuleState[] {
@@ -139,6 +152,7 @@ public class Drivetrain extends SubsystemBase {
     };
   }
 
+  // logs actual chassis speeds
   @Logged(name = "actualChassisSpeeds")
   public ChassisSpeeds getChassisSpeeds() {
     return DrivetrainConfig.DRIVE_KINEMATICS.toChassisSpeeds(
@@ -150,28 +164,35 @@ public class Drivetrain extends SubsystemBase {
         });
   }
 
+  // sets desired chassis speeds given a speed and gives swerveModuleStates new module states
   public void setChassisSpeeds(ChassisSpeeds speeds) {
     desiredChassisSpeeds = speeds;
     var swerveModuleStates = DrivetrainConfig.DRIVE_KINEMATICS.toSwerveModuleStates(speeds);
 
+    // renormalizes wheel speeds if any individual speed is above the specified maximum given the
+    // current swerve module states and the absolute maximum speed the swerve modules can reach
     SwerveDriveKinematics.desaturateWheelSpeeds(
         swerveModuleStates, DrivetrainConfig.MAX_SPEED_METERS_PER_SECOND);
 
+    // sets the desired states of the swerve modules
     this.frontLeft.setDesiredState(swerveModuleStates[0]);
     this.frontRight.setDesiredState(swerveModuleStates[1]);
     this.rearLeft.setDesiredState(swerveModuleStates[2]);
     this.rearRight.setDesiredState(swerveModuleStates[3]);
   }
 
+  // the range measured from the rangefinder in millimeters
   public double getDistance() {
     return rangeFinder.getRangeMM();
   }
 
   @Override
   public void periodic() {
-    rangeFinder.ping();
-    // Update the odometry in the periodic block
 
+    // has ultrasonic sensor send ping and get distance measurement periodically
+    rangeFinder.ping();
+
+    // Update the odometry in the periodic block
     field.setRobotPose(
         this.poseEstimator.update(
             getHeading(),
@@ -182,11 +203,21 @@ public class Drivetrain extends SubsystemBase {
               this.rearRight.getPosition()
             }));
 
+    // Updates the stored reference pose for use when using the CLOSEST_TO_REFERENCE_POSE_STRATEGY
+    // (not in use)
     vision.setReferencePose(this.poseEstimator.getEstimatedPosition());
-    driverVision.setReferencePose(this.poseEstimator.getEstimatedPosition());
+    elevatorBodyVision.setReferencePose(this.poseEstimator.getEstimatedPosition());
 
+    // Puts the pose data from one camera into a list
     List<PhotonPipelineResult> results = Vision.camera.getAllUnreadResults();
 
+    // If there is pose data from the cameras, get the latest estimated pose and update the 'vision'
+    // photon pose estimator
+    // If there is no multitag result and the distance from the camera to the target is greater than
+    // 4 meters, return
+    // Otherwise, add the latest vision pose estimate to a filter with the odometry pose estimate
+    // and set
+    // the guessed pose from that to the current pose
     if (!results.isEmpty()) {
       PhotonPipelineResult result = results.get(results.size() - 1);
       vision
@@ -206,7 +237,7 @@ public class Drivetrain extends SubsystemBase {
 
     if (!results.isEmpty()) {
       PhotonPipelineResult result = results.get(results.size() - 1);
-      driverVision
+      elevatorBodyVision
           .update(result)
           .ifPresent(
               (pose) -> {
@@ -220,16 +251,14 @@ public class Drivetrain extends SubsystemBase {
     }
   }
 
-  /**
-   * Returns the currently-estimated pose of the robot.
-   *
-   * @return The pose.
-   */
+  // Returns the currently estimated pose of the robot
   @Logged
   public Pose2d getPose() {
     return this.poseEstimator.getEstimatedPosition();
   }
 
+  // sets Chassis Speeds  according to the goal distance and rotation according to where the sonar
+  // is facing
   public Command followLine(
       DoubleSupplier distance, DoubleSupplier speed, Supplier<Rotation2d> rotation) {
     return Commands.runEnd(
@@ -241,7 +270,6 @@ public class Drivetrain extends SubsystemBase {
                   rotController.calculate(
                       getPose().getRotation().getRadians(), rotation.get().getRadians()),
                   rotation.get());
-
           setChassisSpeeds(
               ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getPose().getRotation()));
         },
@@ -249,9 +277,11 @@ public class Drivetrain extends SubsystemBase {
         this);
   }
 
+  // Initializes and logs targetAngle and lastDistance
   @Logged public Rotation2d targetAngle;
   @Logged public double lastDistance;
 
+  //
   public Command orbit(Supplier<Pose2d> center, DoubleSupplier speed, DoubleSupplier distance) {
     return Commands.runEnd(
         () -> {
