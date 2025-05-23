@@ -237,7 +237,7 @@ public class Drivetrain extends SubsystemBase {
 
     if (!results.isEmpty()) {
       PhotonPipelineResult result = results.get(results.size() - 1);
-      elevatorBodyVision
+      driverVision
           .update(result)
           .ifPresent(
               (pose) -> {
@@ -251,7 +251,11 @@ public class Drivetrain extends SubsystemBase {
     }
   }
 
-  // Returns the currently estimated pose of the robot
+  /**
+   * Returns the currently-estimated pose of the robot.
+   *
+   * @return The pose.
+   */
   @Logged
   public Pose2d getPose() {
     return this.poseEstimator.getEstimatedPosition();
@@ -270,6 +274,7 @@ public class Drivetrain extends SubsystemBase {
                   rotController.calculate(
                       getPose().getRotation().getRadians(), rotation.get().getRadians()),
                   rotation.get());
+
           setChassisSpeeds(
               ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getPose().getRotation()));
         },
@@ -281,7 +286,6 @@ public class Drivetrain extends SubsystemBase {
   @Logged public Rotation2d targetAngle;
   @Logged public double lastDistance;
 
-  //
   public Command orbit(Supplier<Pose2d> center, DoubleSupplier speed, DoubleSupplier distance) {
     return Commands.runEnd(
         () -> {
