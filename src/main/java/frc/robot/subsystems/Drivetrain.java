@@ -212,7 +212,8 @@ public class Drivetrain extends SubsystemBase {
 
     // If there is pose data from the cameras, get the latest estimated pose and update the 'vision'
     // photon pose estimator
-    // If there is no multi tag result and the distance from the camera to the target is greater than
+    // If there is no multi tag result and the distance from the camera to the target is greater
+    // than
     // 4 meters, return
     // Otherwise, add the latest vision pose estimate to a filter with the odometry pose estimate
     // and set
