@@ -71,12 +71,12 @@ public class Drivetrain extends SubsystemBase {
       new PIDController(
           OrbitConfig.ORBIT_ROTATION_P, OrbitConfig.ORBIT_ROTATION_I, OrbitConfig.ORBIT_ROTATION_D);
 
-  // creates PhotonPoseEstimator that estimates the robot position from one camera
+  // Creates PhotonPoseEstimator that estimates the robot position from one camera
   private PhotonPoseEstimator vision =
       new PhotonPoseEstimator(
           VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.CAMERA_POSITION);
 
-  // creates PhotonPoseEstimator that estimates the robot position from another camera
+  // Creates PhotonPoseEstimator that estimates the robot position from the other camera
   private PhotonPoseEstimator elevatorBodyVision =
       new PhotonPoseEstimator(
           VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.DRIVER_CAMERA_POSITION);
@@ -130,7 +130,7 @@ public class Drivetrain extends SubsystemBase {
         DrivetrainConfig.ROTATION_POSITION_TOLERANCE, DrivetrainConfig.ROTATION_VELOCITY_TOLERANCE);
   }
 
-  // logs desired swerve module states
+  // Logs desired swerve module states
   @Logged(name = "desiredStates")
   public SwerveModuleState[] getDesiredStates() {
     return new SwerveModuleState[] {
@@ -141,7 +141,7 @@ public class Drivetrain extends SubsystemBase {
     };
   }
 
-  // logs actual swerve module states
+  // Logs actual swerve module states
   @Logged(name = "actualStates")
   public SwerveModuleState[] getActualStates() {
     return new SwerveModuleState[] {
