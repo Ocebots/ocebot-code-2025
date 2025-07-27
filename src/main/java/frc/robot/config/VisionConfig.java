@@ -12,7 +12,7 @@ public class VisionConfig {
   public static final String SECOND_CAMERA_NAME = "apriltag2";
 
   public static final AprilTagFieldLayout LAYOUT =
-      AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+      AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark);
   public static final PhotonPoseEstimator.PoseStrategy STRATEGY =
       PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR;
   public static final Transform3d CAMERA_POSITION =
