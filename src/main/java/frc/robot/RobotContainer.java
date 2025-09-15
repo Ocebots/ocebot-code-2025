@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.Positions;
 import frc.robot.subsystems.*;
@@ -37,7 +38,7 @@ public class RobotContainer {
           true,
           drivetrain);
   private int lastButtonPressed;
-  // slows down robot durring pickup
+  // slows down robot during pickup
   private Command pickup =
       coral
           .pickUpCoral()
@@ -78,7 +79,7 @@ public class RobotContainer {
 
   // all controller bindings
   private void configureBindings() {
-    CommandScheduler.getInstance()
+    /*CommandScheduler.getInstance()
         .schedule(
             Commands.run(
                     () -> {
@@ -88,10 +89,10 @@ public class RobotContainer {
                         }
                       }
                     })
-                .ignoringDisable(true));
+                .ignoringDisable(true));*/
     // coral pickup
-    controller
-        .a()
+      CommandScheduler.getInstance().schedule(Commands.run(()->{}).ignoringDisable(true));
+      new Trigger(() -> controller.getRightY() > 0.9)
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -107,8 +108,7 @@ public class RobotContainer {
                   }
                 }));
     // cancel coral pickup
-    controller
-        .b()
+      new Trigger(() -> controller.getRightY() < -0.9)
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -124,7 +124,7 @@ public class RobotContainer {
                 }));
     // enabling the safe state
     controller
-        .x()
+        .povUp()
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -136,6 +136,7 @@ public class RobotContainer {
                   }
                 }));
 
+    /*
     // picking up algae
     controller
         .rightTrigger()
@@ -147,64 +148,61 @@ public class RobotContainer {
 
     // releasing the algae
     controller.y().onTrue(algae.releaseAlgae().andThen(algae.returnToUp()));
+    */
 
     // scoring on all levels
-    totalController
-        .button(15)
+    controller.x()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
                   if (autoDisabled) {
                     return Commands.startEnd(
                             () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
-                        .withDeadline(coral.l4Score(controller.leftTrigger(), false));
+                        .withDeadline(coral.l4Score(controller.leftStick(), false));
                   } else {
                     return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 3);
                   }
                 }));
-    totalController
-        .button(16)
+    controller.y()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
                   if (autoDisabled) {
                     return Commands.startEnd(
                             () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
-                        .withDeadline(coral.l3Score(controller.leftTrigger()));
+                        .withDeadline(coral.l3Score(controller.leftStick()));
                   } else {
                     return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 2);
                   }
                 }));
-    totalController
-        .button(17)
+    controller.a()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
                   if (autoDisabled) {
                     return Commands.startEnd(
                             () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
-                        .withDeadline(coral.l2Score(controller.leftTrigger()));
+                        .withDeadline(coral.l2Score(controller.leftStick()));
                   } else {
                     return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 1);
                   }
                 }));
-    totalController
-        .button(18)
+    controller.b()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
                   if (autoDisabled) {
                     return Commands.startEnd(
                             () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
-                        .withDeadline(coral.l1Score(controller.leftTrigger()));
+                        .withDeadline(coral.l1Score(controller.leftStick()));
                   } else {
                     return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 0);
                   }
                 }));
 
     // clearing algae off reef
-    totalController.button(14).onTrue(coral.l1ReefClear(controller.leftTrigger()));
-    totalController.button(13).onTrue(coral.l2ReefClear(controller.leftTrigger()));
+    controller.povDown().onTrue(coral.l1ReefClear(controller.leftStick()));
+    controller.povRight().onTrue(coral.l2ReefClear(controller.leftStick()));
 
     // driving the robot
     drivetrain.setDefaultCommand(
@@ -219,15 +217,15 @@ public class RobotContainer {
             drivetrain));
 
     // deploy climber, releases algae too
-    controller.povUp().whileTrue(climb.pivotClimb());
+    controller.leftBumper().whileTrue(climb.pivotClimb());
     controller
-        .povDown()
+        .rightBumper()
         .whileTrue(
             climb
                 .pivotRelease()
                 .alongWith(algae.deployForClimb().unless(() -> DriverStation.getMatchTime() > 25)));
-    controller.povLeft().onTrue(Commands.runOnce(() -> autoDisabled = true));
-    controller.povRight().onTrue(Commands.runOnce(() -> autoDisabled = true));
+    controller.povLeft().onTrue(Commands.runOnce(() -> autoDisabled = !autoDisabled));
+    //controller.povRight().onTrue(Commands.runOnce(() -> autoDisabled = true));
   }
 
   // deadbands for driving
