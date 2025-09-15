@@ -80,19 +80,19 @@ public class RobotContainer {
   // all controller bindings
   private void configureBindings() {
     /*CommandScheduler.getInstance()
-        .schedule(
-            Commands.run(
-                    () -> {
-                      for (int i = 0; i < 12; i++) {
-                        if (totalController.getHID().getRawButtonPressed(i + 1)) {
-                          lastButtonPressed = i;
-                        }
-                      }
-                    })
-                .ignoringDisable(true));*/
+    .schedule(
+        Commands.run(
+                () -> {
+                  for (int i = 0; i < 12; i++) {
+                    if (totalController.getHID().getRawButtonPressed(i + 1)) {
+                      lastButtonPressed = i;
+                    }
+                  }
+                })
+            .ignoringDisable(true));*/
     // coral pickup
-      CommandScheduler.getInstance().schedule(Commands.run(()->{}).ignoringDisable(true));
-      new Trigger(() -> controller.getRightY() > 0.9)
+    CommandScheduler.getInstance().schedule(Commands.run(() -> {}).ignoringDisable(true));
+    new Trigger(() -> controller.getRightY() > 0.9)
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -108,7 +108,7 @@ public class RobotContainer {
                   }
                 }));
     // cancel coral pickup
-      new Trigger(() -> controller.getRightY() < -0.9)
+    new Trigger(() -> controller.getRightY() < -0.9)
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -151,7 +151,8 @@ public class RobotContainer {
     */
 
     // scoring on all levels
-    controller.x()
+    controller
+        .x()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
@@ -163,7 +164,8 @@ public class RobotContainer {
                     return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 3);
                   }
                 }));
-    controller.y()
+    controller
+        .y()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
@@ -175,7 +177,8 @@ public class RobotContainer {
                     return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 2);
                   }
                 }));
-    controller.a()
+    controller
+        .a()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
@@ -187,7 +190,8 @@ public class RobotContainer {
                     return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 1);
                   }
                 }));
-    controller.b()
+    controller
+        .b()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
@@ -225,7 +229,7 @@ public class RobotContainer {
                 .pivotRelease()
                 .alongWith(algae.deployForClimb().unless(() -> DriverStation.getMatchTime() > 25)));
     controller.povLeft().onTrue(Commands.runOnce(() -> autoDisabled = !autoDisabled));
-    //controller.povRight().onTrue(Commands.runOnce(() -> autoDisabled = true));
+    // controller.povRight().onTrue(Commands.runOnce(() -> autoDisabled = true));
   }
 
   // deadbands for driving
