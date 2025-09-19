@@ -37,7 +37,7 @@ public class RobotContainer {
           drivetrain::followTrajectory,
           true,
           drivetrain);
-  private int lastButtonPressed;
+  private int lastButtonPressed = 7;
   // slows down robot during pickup
   private Command pickup =
       coral
@@ -79,19 +79,33 @@ public class RobotContainer {
 
   // all controller bindings
   private void configureBindings() {
-    /*CommandScheduler.getInstance()
-    .schedule(
-        Commands.run(
-                () -> {
-                  for (int i = 0; i < 12; i++) {
-                    if (totalController.getHID().getRawButtonPressed(i + 1)) {
-                      lastButtonPressed = i;
-                    }
-                  }
-                })
-            .ignoringDisable(true));*/
+    controller
+        .leftTrigger()
+        .onTrue(
+            Commands.runOnce(
+                    () -> {
+                      if (lastButtonPressed == 11) {
+                        lastButtonPressed = 0;
+                      } else {
+                        lastButtonPressed = lastButtonPressed + 1;
+                      }
+                    })
+                .ignoringDisable(true));
+
+    controller
+        .rightTrigger()
+        .onTrue(
+            Commands.runOnce(
+                    () -> {
+                      if (lastButtonPressed == 0) {
+                        lastButtonPressed = 11;
+                      } else {
+                        lastButtonPressed = lastButtonPressed - 1;
+                      }
+                    })
+                .ignoringDisable(true));
+
     // coral pickup
-    CommandScheduler.getInstance().schedule(Commands.run(() -> {}).ignoringDisable(true));
     new Trigger(() -> controller.getRightY() > 0.9)
         .onTrue(
             Commands.runOnce(
@@ -136,21 +150,6 @@ public class RobotContainer {
                   }
                 }));
 
-    /*
-    // picking up algae
-    controller
-        .rightTrigger()
-        .onTrue(
-            algae
-                .pickUpAlgae()
-                .until(() -> !controller.rightTrigger().getAsBoolean())
-                .andThen(algae.storeAlgae()));
-
-    // releasing the algae
-    controller.y().onTrue(algae.releaseAlgae().andThen(algae.returnToUp()));
-    */
-
-    // scoring on all levels
     controller
         .x()
         .whileTrue(
@@ -229,7 +228,7 @@ public class RobotContainer {
                 .pivotRelease()
                 .alongWith(algae.deployForClimb().unless(() -> DriverStation.getMatchTime() > 25)));
     controller.povLeft().onTrue(Commands.runOnce(() -> autoDisabled = !autoDisabled));
-    // controller.povRight().onTrue(Commands.runOnce(() -> autoDisabled = true));
+    controller.povRight().onTrue(Commands.runOnce(() -> autoDisabled = true));
   }
 
   // deadbands for driving
