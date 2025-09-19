@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.config.ControllerConfig;
@@ -28,7 +27,6 @@ public class RobotContainer {
   private Coral coral = new Coral();
   private Algae algae = new Algae();
   private CommandXboxController controller = new CommandXboxController(0);
-  private CommandGenericHID totalController = new CommandGenericHID(1);
   private Drivetrain drivetrain = new Drivetrain();
   private AutoFactory autos =
       new AutoFactory(
