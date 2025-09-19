@@ -6,6 +6,7 @@ package frc.robot;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
+import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -28,6 +29,7 @@ public class RobotContainer {
   private Algae algae = new Algae();
   private CommandXboxController controller = new CommandXboxController(0);
   private Drivetrain drivetrain = new Drivetrain();
+  private final AHRS gyro = new AHRS(AHRS.NavXComType.kMXP_SPI);
   private AutoFactory autos =
       new AutoFactory(
           drivetrain::getPose,
@@ -245,6 +247,7 @@ public class RobotContainer {
                 .alongWith(algae.deployForClimb().unless(() -> DriverStation.getMatchTime() > 25)));
     // when left plus pressed, disable or enable auto, defaults at disabled
     controller.povLeft().onTrue(Commands.runOnce(() -> autoDisabled = !autoDisabled));
+    controller.back().onTrue(Commands.runOnce(() -> gyro.zeroYaw()));
   }
 
   // deadbands for driving
