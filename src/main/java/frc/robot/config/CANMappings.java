@@ -14,8 +14,8 @@ public class CANMappings {
   public static final int ALGAE_WHEEL_ID = 13;
   public static final int ALGAE_ARM_ID = 12;
 
-  public static final int ELEVATOR_L_ID = 10; // red tape
-  public static final int ELEVATOR_R_ID = 11;
+  public static final int ELEVATOR_L_ID = 11; // red tape
+  public static final int ELEVATOR_R_ID = 10;
 
   public static final int CORAL_PIVOT_ID = 16;
   public static final int CLIMB_PIVOT_ID = 14;
