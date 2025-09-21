@@ -6,6 +6,7 @@ package frc.robot;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
+import com.studica.frc.AHRS;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -15,8 +16,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.Positions;
 import frc.robot.subsystems.*;
@@ -27,8 +28,8 @@ public class RobotContainer {
   private Coral coral = new Coral();
   private Algae algae = new Algae();
   private CommandXboxController controller = new CommandXboxController(0);
-  private CommandGenericHID totalController = new CommandGenericHID(1);
   private Drivetrain drivetrain = new Drivetrain();
+  private final AHRS gyro = new AHRS(AHRS.NavXComType.kMXP_SPI);
   private AutoFactory autos =
       new AutoFactory(
           drivetrain::getPose,
@@ -36,8 +37,11 @@ public class RobotContainer {
           drivetrain::followTrajectory,
           true,
           drivetrain);
-  private int lastButtonPressed;
-  // slows down robot durring pickup
+  // used to determine which section of the reef to score on, defaults at start to pole to front and
+  // left of driver
+  private int reefSection = 7;
+
+  // slows down robot during pickup
   private Command pickup =
       coral
           .pickUpCoral()
@@ -78,20 +82,37 @@ public class RobotContainer {
 
   // all controller bindings
   private void configureBindings() {
-    CommandScheduler.getInstance()
-        .schedule(
-            Commands.run(
+    // if left trigger is pressed, shifts selected reef section to score on left one, works while
+    // robot is disabled for autonomous
+    controller
+        .leftTrigger()
+        .onTrue(
+            Commands.runOnce(
                     () -> {
-                      for (int i = 0; i < 12; i++) {
-                        if (totalController.getHID().getRawButtonPressed(i + 1)) {
-                          lastButtonPressed = i;
-                        }
+                      if (reefSection == 11) {
+                        reefSection = 0;
+                      } else {
+                        reefSection += 1;
                       }
                     })
                 .ignoringDisable(true));
-    // coral pickup
+    // if right trigger is pressed, shifts selected reef section to score on right one, works while
+    // robot is disabled for autonomous
     controller
-        .a()
+        .rightTrigger()
+        .onTrue(
+            Commands.runOnce(
+                    () -> {
+                      if (reefSection == 0) {
+                        reefSection = 11;
+                      } else {
+                        reefSection -= 1;
+                      }
+                    })
+                .ignoringDisable(true));
+
+    // when right toggle goes up, cancels ground coral pickup or initiates ground coral pickup
+    new Trigger(() -> controller.getRightY() > 0.9)
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -106,9 +127,8 @@ public class RobotContainer {
                     fieldRelative = false;
                   }
                 }));
-    // cancel coral pickup
-    controller
-        .b()
+    // when right toggle goes down, cancels station coral pickup or initiates station coral pickup
+    new Trigger(() -> controller.getRightY() < -0.9)
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -122,9 +142,9 @@ public class RobotContainer {
                     speedMultiplier = 0.4;
                   }
                 }));
-    // enabling the safe state
+    // when upper plus button is pressed, cancels safe state or initiates safe state
     controller
-        .x()
+        .povUp()
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -135,76 +155,74 @@ public class RobotContainer {
                     speedMultiplier = 1.0;
                   }
                 }));
-
-    // picking up algae
+    // when x is pressed and if auto is disabled, raises elevator for l4 scoring, when left stick is
+    // pressed, completes scoring motion
+    // is auto is enabled, automatically goes to previously selected reef section and l4 scores
     controller
-        .rightTrigger()
-        .onTrue(
-            algae
-                .pickUpAlgae()
-                .until(() -> !controller.rightTrigger().getAsBoolean())
-                .andThen(algae.storeAlgae()));
-
-    // releasing the algae
-    controller.y().onTrue(algae.releaseAlgae().andThen(algae.returnToUp()));
-
-    // scoring on all levels
-    totalController
-        .button(15)
+        .x()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
                   if (autoDisabled) {
                     return Commands.startEnd(
                             () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
-                        .withDeadline(coral.l4Score(controller.leftTrigger(), false));
+                        .withDeadline(coral.l4Score(controller.leftStick(), false));
                   } else {
-                    return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 3);
+                    return coral.goToReef(drivetrain, () -> reefSection, () -> 3);
                   }
                 }));
-    totalController
-        .button(16)
+    // when y is pressed and if auto is disabled, raises elevator for l3 scoring, when left stick is
+    // pressed, completes scoring motion
+    // is auto is enabled, automatically goes to previously selected reef section and l3 scores
+    controller
+        .y()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
                   if (autoDisabled) {
                     return Commands.startEnd(
                             () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
-                        .withDeadline(coral.l3Score(controller.leftTrigger()));
+                        .withDeadline(coral.l3Score(controller.leftStick()));
                   } else {
-                    return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 2);
+                    return coral.goToReef(drivetrain, () -> reefSection, () -> 2);
                   }
                 }));
-    totalController
-        .button(17)
+    // when a is pressed and if auto is disabled, raises elevator for l2 scoring, when left stick is
+    // pressed, completes scoring motion
+    // is auto is enabled, automatically goes to previously selected reef section and l2 scores
+    controller
+        .a()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
                   if (autoDisabled) {
                     return Commands.startEnd(
                             () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
-                        .withDeadline(coral.l2Score(controller.leftTrigger()));
+                        .withDeadline(coral.l2Score(controller.leftStick()));
                   } else {
-                    return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 1);
+                    return coral.goToReef(drivetrain, () -> reefSection, () -> 1);
                   }
                 }));
-    totalController
-        .button(18)
+    // when b is pressed and if auto is disabled, raises elevator for l1 scoring, when left stick is
+    // pressed, completes scoring motion
+    // is auto is enabled, automatically goes to previously selected reef section and l1 scores
+    controller
+        .b()
         .whileTrue(
             Commands.deferredProxy(
                 () -> {
                   if (autoDisabled) {
                     return Commands.startEnd(
                             () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
-                        .withDeadline(coral.l1Score(controller.leftTrigger()));
+                        .withDeadline(coral.l1Score(controller.leftStick()));
                   } else {
-                    return coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 0);
+                    return coral.goToReef(drivetrain, () -> reefSection, () -> 0);
                   }
                 }));
 
-    // clearing algae off reef
-    totalController.button(14).onTrue(coral.l1ReefClear(controller.leftTrigger()));
-    totalController.button(13).onTrue(coral.l2ReefClear(controller.leftTrigger()));
+    // clearing algae off reef, down on plus for l1 clear, right on plus for l2 clear
+    controller.povDown().onTrue(coral.l1ReefClear(controller.leftStick()));
+    controller.povRight().onTrue(coral.l2ReefClear(controller.leftStick()));
 
     // driving the robot
     drivetrain.setDefaultCommand(
@@ -218,16 +236,18 @@ public class RobotContainer {
                     true),
             drivetrain));
 
-    // deploy climber, releases algae too
-    controller.povUp().whileTrue(climb.pivotClimb());
+    // deploy climber
+    controller.leftBumper().whileTrue(climb.pivotClimb());
+    // release climber and deploy algae for climb unless not nearing end of match
     controller
-        .povDown()
+        .rightBumper()
         .whileTrue(
             climb
                 .pivotRelease()
                 .alongWith(algae.deployForClimb().unless(() -> DriverStation.getMatchTime() > 25)));
-    controller.povLeft().onTrue(Commands.runOnce(() -> autoDisabled = true));
-    controller.povRight().onTrue(Commands.runOnce(() -> autoDisabled = true));
+    // when left plus pressed, disable or enable auto, defaults at disabled
+    controller.povLeft().onTrue(Commands.runOnce(() -> autoDisabled = !autoDisabled));
+    controller.back().onTrue(Commands.runOnce(() -> gyro.zeroYaw()));
   }
 
   // deadbands for driving
@@ -237,12 +257,12 @@ public class RobotContainer {
 
   // sets the pose for auto-align
   public void periodic() {
-    selectedSpot.setRobotPose(Positions.getIndividualReef(lastButtonPressed));
+    selectedSpot.setRobotPose(Positions.getIndividualReef(reefSection));
   }
 
   // autonomous command
   public Command getAutonomousCommand() {
     return Commands.sequence(
-        Commands.waitSeconds(2), coral.goToReef(drivetrain, () -> lastButtonPressed, () -> 3));
+        Commands.waitSeconds(2), coral.goToReef(drivetrain, () -> reefSection, () -> 3));
   }
 }
