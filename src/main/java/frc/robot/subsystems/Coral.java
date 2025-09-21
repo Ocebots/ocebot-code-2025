@@ -27,10 +27,10 @@ public class Coral extends SubsystemBase {
 
   // rotations for levels
   private Rotation2d[] coralScoringRotations = {
-    Rotation2d.fromDegrees(60),
-    Rotation2d.fromRadians(5.97),
-    Rotation2d.fromRadians(6.02),
-    Rotation2d.fromDegrees(64.0)
+    Rotation2d.fromRadians(1),
+    Rotation2d.fromRadians(1.7),
+    Rotation2d.fromRadians(1.7),
+    Rotation2d.fromRadians(0.3)
   };
   private Rotation2d[] reefClearRotationsPrimary = {
     Rotation2d.fromDegrees(-35), Rotation2d.fromDegrees(-35)
@@ -44,7 +44,7 @@ public class Coral extends SubsystemBase {
     movementController.setTolerance(CoralConfig.POSITION_TOLERANCE, CoralConfig.VELOCITY_TOLERANCE);
     movementController.enableContinuousInput(-Math.PI, Math.PI);
     elevator.setDefaultCommand(elevator.setElevatorHeight(() -> 0.0));
-    coralPivot.setDefaultCommand(coralPivot.setPivotAngle(() -> Rotation2d.fromDegrees(75)));
+    coralPivot.setDefaultCommand(coralPivot.setPivotAngle(() -> Rotation2d.fromRadians(0.35)));
     grabber.setDefaultCommand(
         Commands.run(
             () -> {
@@ -62,6 +62,7 @@ public class Coral extends SubsystemBase {
     return Commands.waitSeconds(0.3)
         .andThen(coralPivot.setPivotAngle(() -> coralScoringRotations[idx]))
         .alongWith(elevator.setElevatorHeight(() -> elevatorScoringHeights[idx]))
+        .alongWith(Commands.run(grabber::run, grabber))
         .withDeadline(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(0.8))
@@ -111,7 +112,7 @@ public class Coral extends SubsystemBase {
                       if (elevator.getPosition() > 1.0 || shouldComplete) {
                         return coralScoringRotations[3];
                       } else {
-                        return coralScoringRotations[3].minus(Rotation2d.fromDegrees(15));
+                        return coralScoringRotations[3].plus(Rotation2d.fromDegrees(15));
                       }
                     })
                 .alongWith(

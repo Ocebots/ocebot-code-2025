@@ -41,7 +41,8 @@ public class Elevator extends SubsystemBase {
     elevator.configure(
         new SparkFlexConfig()
             .smartCurrentLimit(ElevatorConfig.ELEVATOR_CURRENT_LIMIT)
-            .idleMode(ElevatorConfig.ELEVATOR_IDLE_MODE).inverted(false)
+            .idleMode(ElevatorConfig.ELEVATOR_IDLE_MODE)
+            .inverted(false)
             .apply(
                 new EncoderConfig()
                     .positionConversionFactor(ElevatorConfig.ENCODER_POSITION_CONVERSION_FACTOR)

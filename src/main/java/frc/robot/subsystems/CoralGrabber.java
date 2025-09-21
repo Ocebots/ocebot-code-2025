@@ -85,6 +85,6 @@ public class CoralGrabber
   } // Stops motor
 
   public void run() {
-    motor.set(0.1);
+    motor.set(0.2);
   } // Sets motor speed to (roughly) 10% of max
 }
