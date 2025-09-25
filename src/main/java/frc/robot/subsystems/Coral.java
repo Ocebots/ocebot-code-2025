@@ -8,11 +8,13 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer;
 import frc.robot.config.CoralConfig;
 import frc.robot.config.Positions;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
+import frc.robot.RobotContainer;
 
 @Logged
 public class Coral extends SubsystemBase {
@@ -21,6 +23,7 @@ public class Coral extends SubsystemBase {
   private PIDController movementController =
       new PIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D);
   private CoralPivot coralPivot = new CoralPivot();
+
 
   // heights for levels
   private double[] elevatorScoringHeights = {0.0, 0.900, 1.29, 1.360};
@@ -33,10 +36,10 @@ public class Coral extends SubsystemBase {
     Rotation2d.fromRadians(0.3)
   };
   private Rotation2d[] reefClearRotationsPrimary = {
-    Rotation2d.fromDegrees(-35), Rotation2d.fromDegrees(-35)
+    Rotation2d.fromRadians(1.5), Rotation2d.fromRadians(1.5)
   };
   private Rotation2d[] reefClearRotationsSecondary = {
-    Rotation2d.fromDegrees(30), Rotation2d.fromDegrees(30)
+    Rotation2d.fromRadians(0.95), Rotation2d.fromRadians(0.95)
   };
   private double[] reefClearHeights = {0.65, 1.0564};
 
@@ -48,7 +51,7 @@ public class Coral extends SubsystemBase {
     grabber.setDefaultCommand(
         Commands.run(
             () -> {
-              if (!elevator.isAtPosition() || !coralPivot.isPivotReady()) {
+              if (!elevator.isAtPosition() || !coralPivot.isPivotReady() || !RobotContainer.stopGrab) {
                 grabber.run();
               } else {
                 grabber.stop();
@@ -62,7 +65,6 @@ public class Coral extends SubsystemBase {
     return Commands.waitSeconds(0.3)
         .andThen(coralPivot.setPivotAngle(() -> coralScoringRotations[idx]))
         .alongWith(elevator.setElevatorHeight(() -> elevatorScoringHeights[idx]))
-        .alongWith(Commands.run(grabber::run, grabber))
         .withDeadline(
             Commands.waitUntil(elevator::isAtPosition)
                 .andThen(Commands.waitUntil(coralPivot::isPivotReady), Commands.waitSeconds(0.8))

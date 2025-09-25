@@ -40,7 +40,7 @@ public class RobotContainer {
   // used to determine which section of the reef to score on, defaults at start to pole to front and
   // left of driver
   private int reefSection = 7;
-
+  public static boolean stopGrab = false;
   // slows down robot during pickup
   private Command pickup =
       coral
@@ -206,19 +206,19 @@ public class RobotContainer {
     // when b is pressed and if auto is disabled, raises elevator for l1 scoring, when left stick is
     // pressed, completes scoring motion
     // is auto is enabled, automatically goes to previously selected reef section and l1 scores
-    controller
-        .b()
-        .whileTrue(
-            Commands.deferredProxy(
-                () -> {
-                  if (autoDisabled) {
-                    return Commands.startEnd(
-                            () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
-                        .withDeadline(coral.l1Score(controller.leftStick()));
-                  } else {
-                    return coral.goToReef(drivetrain, () -> reefSection, () -> 0);
-                  }
-                }));
+    /* controller
+    .b()
+    .whileTrue(
+        Commands.deferredProxy(
+            () -> {
+              if (autoDisabled) {
+                return Commands.startEnd(
+                        () -> speedMultiplier = 0.25, () -> speedMultiplier = 1.0)
+                    .withDeadline(coral.l1Score(controller.leftStick()));
+              } else {
+                return coral.goToReef(drivetrain, () -> reefSection, () -> 0);
+              }
+            }));*/
 
     // clearing algae off reef, down on plus for l1 clear, right on plus for l2 clear
     controller.povDown().onTrue(coral.l1ReefClear(controller.leftStick()));
@@ -248,6 +248,8 @@ public class RobotContainer {
     // when left plus pressed, disable or enable auto, defaults at disabled
     controller.povLeft().onTrue(Commands.runOnce(() -> autoDisabled = !autoDisabled));
     controller.back().onTrue(Commands.runOnce(() -> gyro.zeroYaw()));
+    controller.leftStick().onTrue(Commands.runOnce(()->stopGrab = true));
+    controller.leftStick().onFalse(Commands.runOnce(()->stopGrab = false));
   }
 
   // deadbands for driving
