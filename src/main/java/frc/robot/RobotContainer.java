@@ -248,8 +248,8 @@ public class RobotContainer {
     // when left plus pressed, disable or enable auto, defaults at disabled
     controller.povLeft().onTrue(Commands.runOnce(() -> autoDisabled = !autoDisabled));
     controller.back().onTrue(Commands.runOnce(() -> gyro.zeroYaw()));
-    controller.leftStick().onTrue(Commands.runOnce(()->stopGrab = true));
-    controller.leftStick().onFalse(Commands.runOnce(()->stopGrab = false));
+    controller.leftStick().onTrue(Commands.runOnce(() -> stopGrab = true));
+    controller.leftStick().onFalse(Commands.runOnce(() -> stopGrab = false));
   }
 
   // deadbands for driving

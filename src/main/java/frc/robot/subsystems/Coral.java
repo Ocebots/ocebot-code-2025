@@ -14,7 +14,6 @@ import frc.robot.config.Positions;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
-import frc.robot.RobotContainer;
 
 @Logged
 public class Coral extends SubsystemBase {
@@ -23,7 +22,6 @@ public class Coral extends SubsystemBase {
   private PIDController movementController =
       new PIDController(CoralConfig.MOVEMENT_P, CoralConfig.MOVEMENT_I, CoralConfig.MOVEMENT_D);
   private CoralPivot coralPivot = new CoralPivot();
-
 
   // heights for levels
   private double[] elevatorScoringHeights = {0.0, 0.900, 1.29, 1.360};
@@ -51,7 +49,9 @@ public class Coral extends SubsystemBase {
     grabber.setDefaultCommand(
         Commands.run(
             () -> {
-              if (!elevator.isAtPosition() || !coralPivot.isPivotReady() || !RobotContainer.stopGrab) {
+              if (!elevator.isAtPosition()
+                  || !coralPivot.isPivotReady()
+                  || !RobotContainer.stopGrab) {
                 grabber.run();
               } else {
                 grabber.stop();
