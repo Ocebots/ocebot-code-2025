@@ -74,12 +74,12 @@ public class Drivetrain extends SubsystemBase {
   // Creates PhotonPoseEstimator that estimates the robot position from one camera
   private PhotonPoseEstimator vision =
       new PhotonPoseEstimator(
-          VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.CAMERA_POSITION);
+          VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.LEFT_CAMERA_POSITION);
 
   // Creates PhotonPoseEstimator that estimates the robot position from another camera
   private PhotonPoseEstimator driverVision =
       new PhotonPoseEstimator(
-          VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.DRIVER_CAMERA_POSITION);
+          VisionConfig.LAYOUT, VisionConfig.STRATEGY, VisionConfig.RIGHT_CAMERA_POSITION);
 
   // creates Ultrasonic rangeFinder that measures distance (currently not in use)
   Ultrasonic rangeFinder = new Ultrasonic(1, 2);
