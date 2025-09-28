@@ -24,7 +24,7 @@ public class Coral extends SubsystemBase {
   private CoralPivot coralPivot = new CoralPivot();
 
   // heights for levels
-  private double[] elevatorScoringHeights = {0.0, 0.900, 1.29, 1.360};
+  private double[] elevatorScoringHeights = {0.0, 0.910, 1.31, 1.360};
 
   // rotations for levels
   private Rotation2d[] coralScoringRotations = {
@@ -34,10 +34,10 @@ public class Coral extends SubsystemBase {
     Rotation2d.fromRadians(0.3)
   };
   private Rotation2d[] reefClearRotationsPrimary = {
-    Rotation2d.fromRadians(1.5), Rotation2d.fromRadians(1.5)
+    Rotation2d.fromRadians(1.9), Rotation2d.fromRadians(1.9)
   };
   private Rotation2d[] reefClearRotationsSecondary = {
-    Rotation2d.fromRadians(0.95), Rotation2d.fromRadians(0.95)
+    Rotation2d.fromRadians(1.5), Rotation2d.fromRadians(1.5)
   };
   private double[] reefClearHeights = {0.65, 1.0564};
 
@@ -202,7 +202,11 @@ public class Coral extends SubsystemBase {
                       .getRadians());
             },
             () -> CoralConfig.MOVEMENT_DISTANCE)
-        .until(() -> movementController.atSetpoint())
+        .until(
+            () ->
+                movementController.atSetpoint()
+                    && drivetrain.rotController.atSetpoint()
+                    && drivetrain.xController.atSetpoint())
         .andThen(
             Commands.waitSeconds(1.0)
                 .andThen(

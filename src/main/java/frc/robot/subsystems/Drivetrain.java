@@ -210,7 +210,8 @@ public class Drivetrain extends SubsystemBase {
     // Puts the pose data from one camera into a list
     List<PhotonPipelineResult> results = Vision.camera.getAllUnreadResults();
 
-    // If there is pose data from the cameras, get the latest estimated pose and update the 'vision'
+    // If there is pose data from the cameras, get the latest estimated pose and update the
+    // 'vision'
     // photon pose estimator
     // If there is no multi tag result and the distance from the camera to the target is greater
     // than
