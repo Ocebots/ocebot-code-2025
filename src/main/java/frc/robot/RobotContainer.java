@@ -232,7 +232,7 @@ public class RobotContainer {
                     applyDeadband(-controller.getLeftY() * speedMultiplier),
                     applyDeadband(-controller.getLeftX() * speedMultiplier),
                     applyDeadband(-controller.getRightX() * speedMultiplier),
-                    fieldRelative,
+                    true,
                     true),
             drivetrain));
 
@@ -265,6 +265,6 @@ public class RobotContainer {
   // autonomous command
   public Command getAutonomousCommand() {
     return Commands.sequence(
-        Commands.waitSeconds(2), coral.goToReef(drivetrain, () -> reefSection, () -> 3));
+        Commands.waitSeconds(1), coral.goToReef(drivetrain, () -> reefSection, () -> 3));
   }
 }
